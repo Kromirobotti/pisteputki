@@ -289,13 +289,13 @@ ul.steps{margin:0; padding-left:20px} ul.steps li{margin:2px 0}
 </head>
 <body>
 <script>
-window.APP_VERSION='41 (4.11.2026)';
+window.APP_VERSION='43 (4.11.2026)';
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
 try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
 window.addEventListener('load',()=>{ try{ const k='pisteputki-appver', old=localStorage.getItem(k); localStorage.setItem(k, window.APP_VERSION);
   if(old && old!==window.APP_VERSION) setTimeout(()=>{ if(typeof window.__toast==='function') window.__toast('Peli päivittyi: versio '+window.APP_VERSION); },1200); }catch(e){} });
 </script>
-<script src="pp3d.js?v=41"></script>
+<script src="pp3d.js?v=43"></script>
 
 <div class="wrap" id="app"></div>
 
@@ -1924,7 +1924,9 @@ function kid(x,y,s,mode){ const a=S.avatar, sk=SKIN[a.skin]||SKIN[0], hc=HAIR[a.
   <rect x="9" y="44" width="9" height="30" rx="4.5" fill="${SP.f}"/><rect x="42" y="44" width="9" height="30" rx="4.5" fill="${SP.f}"/>
   <circle cx="13.5" cy="76" r="4.5" fill="${sk}"/><circle cx="46.5" cy="76" r="4.5" fill="${sk}"/>
   ${girl?`<path d="M19 43 Q30 39 41 43 Q44 50 41 60 Q39 66 43 82 L17 82 Q21 66 19 60 Q16 50 19 43 Z" fill="${SP.f}"/>`:`<rect x="16" y="42" width="28" height="40" rx="7" fill="${SP.f}"/>`}${mode==='hockey'?'<rect x="16" y="64" width="28" height="5" fill="#fff" opacity=".85"/>':mode==='football'?footKit():mode==='floorball'?floorKit():''}${(mode==='hockey'||mode==='football'||mode==='floorball'||mode==='basketball')?kidLogo(mode)+chKid(mode):''}
-  <circle cx="30" cy="28" r="14" fill="${sk}"/>${hair}
+  ${(mode==='horse'&&g.rvest)?(()=>{ const V=paint(g.rvest); return V.d+`<path d="M17 44 L43 44 L42 79 L18 79 Z" fill="${V.f}" stroke="rgba(0,0,0,.18)"/><path d="M30 44 L30 79" stroke="rgba(0,0,0,.25)" stroke-width="1.2"/>`; })():''}
+  ${(mode==='horse'&&g.rboots)?(()=>{ const B=paint(g.rboots); return B.d+`<rect x="18" y="98" width="11" height="19" rx="3" fill="${B.f}"/><rect x="31" y="98" width="11" height="19" rx="3" fill="${B.f}"/>`; })():''}
+  <circle cx="30" cy="28" r="14" fill="${sk}"/>${hair}${(mode==='horse'&&g.rhelmet)?(()=>{ const H=paint(g.rhelmet); return H.d+`<path d="M14.5 27 Q14.5 9 30 9 Q45.5 9 45.5 27 Z" fill="${H.f}" stroke="rgba(0,0,0,.2)"/><path d="M30 27 L46 27 Q50 27 50 29 L30 29 Z" fill="#22252B"/>`; })():''}
   <circle cx="25" cy="29" r="1.9" fill="#1d1d1d"/><circle cx="35" cy="29" r="1.9" fill="#1d1d1d"/>${girl?'<path d="M22.5 26.4 l-1.6 -1.4 M24 26 l-0.6 -1.8 M37.5 26.4 l1.6 -1.4 M36 26 l0.6 -1.8" stroke="#1d1d1d" stroke-width="1" stroke-linecap="round"/>':''}
   <path d="M25 35 Q30 39 35 35" stroke="#1d1d1d" stroke-width="1.8" fill="none" stroke-linecap="round"/>${mode==='floorball'?GOGGLES:''}</g>`; }
 const shade=(c,k=.72)=>{ c=kitBase(c)||'#888888'; if(!/^#[0-9a-f]{6}$/i.test(c)) return 'rgba(0,0,0,.35)'; const n=parseInt(c.slice(1),16), f=x=>Math.max(0,Math.min(255,Math.round(x*k))); return '#'+[(n>>16)&255,(n>>8)&255,n&255].map(x=>f(x).toString(16).padStart(2,'0')).join(''); };
@@ -2449,7 +2451,7 @@ function miniRide(n, done){ const k=Math.max(3,n), G=192, HX=36, HS=.6, speed=15
 function careMini(care, ok){ const fin=()=>{ SFX.fanfare(); applyCare(care, ok, true); careOutcome(care, ok); };
   R={kind:'mini', care, ok, fin};
   if(isDog()){ if(care==='food') dogFeed(ok, fin); else if(care==='clean') dogBrush(ok, fin); else if(care==='trick') dogTrick(ok, fin); else if(care==='joy') dogWalk(ok, fin); else fin(); return; }
-  if(care==='food'){ if(use3d() && ok>0){ R={kind:'mini3d', care, ok, fin}; PP3D.mount(null,{mode:'feed', carrots:ok, pet:S.profile.pet, colors:horseColors(), avatar:avatar3d(), sound:S.sound!==false, say:t=>{ if(autoRead()) speakSeq([[t,'fi-FI']]); }, onDone:()=>fin(), onSkip:()=>fin()}); } else miniFeed(ok, fin); } else if(care==='clean') miniBrush(ok, fin); else if(care==='hoof') miniHoof(ok, fin); else if(care==='joy') miniRide(ok, fin); else fin(); }
+  if(care==='food'){ if(use3d() && ok>0){ R={kind:'mini3d', care, ok, fin}; PP3D.mount(null,{mode:'feed', carrots:ok, pet:S.profile.pet, colors:horseColors(), avatar:avatar3d(), gear:gear3d(), sound:S.sound!==false, say:t=>{ if(autoRead()) speakSeq([[t,'fi-FI']]); }, onDone:()=>fin(), onSkip:()=>fin()}); } else miniFeed(ok, fin); } else if(care==='clean') miniBrush(ok, fin); else if(care==='hoof') miniHoof(ok, fin); else if(care==='joy') miniRide(ok, fin); else fin(); }
 
 /* ================= v12: koiranpentu-teema ================= */
 const DOG_COATS=[['Kerma','#F3E3C8','#E0C9A4'],['Kulta','#D9A45A','#BF8940'],['Suklaa','#7A4A2E','#633A22'],['Musta','#34302E','#221E1C'],['Harmaa','#B3B3B8','#96969C']];
@@ -5161,7 +5163,13 @@ SHOP.horse=[
   it('w_black','Mustat pintelit',90,'wraps','#22252B','Pintelit'),it('w_check','Ruudulliset pintelit',200,'wraps','p:check:#7E57C2:#FFFFFF','Pintelit'),it('w_gold','Kultaiset pintelit',650,'wraps','#E0A800','Pintelit'),
   it('bn_white','Valkoinen korvahuppu',110,'bonnet','#F4F4F4','Korvahuput'),it('bn_blue','Sininen korvahuppu',110,'bonnet','#2F6DB5','Korvahuput'),it('bn_pink','Pinkki korvahuppu',120,'bonnet','#F08CB4','Korvahuput'),it('bn_purple','Violetti korvahuppu',120,'bonnet','#7E57C2','Korvahuput'),
   it('br_brown','Ruskeat nahkasuitset',250,'bridle','#6B3A1E','Suitset'),it('bridle','Kultaiset suitset',600,'bridle',true,'Suitset','#E0A800'),
-  it('wreath','Kukkaseppele',220,'wreath',true,'Juhlavarusteet','#FF6FA3')];
+  it('wreath','Kukkaseppele',220,'wreath',true,'Juhlavarusteet','#FF6FA3'),
+  it('rh_black','Musta ratsastuskypärä',90,'rhelmet','#22252B','Kypärät'),it('rh_blue','Sininen ratsastuskypärä',90,'rhelmet','#2F6DB5','Kypärät'),it('rh_pink','Pinkki ratsastuskypärä',110,'rhelmet','#F08CB4','Kypärät'),
+  it('rh_white','Valkoinen ratsastuskypärä',110,'rhelmet','#F4F4F4','Kypärät'),it('rh_purple','Violetti ratsastuskypärä',130,'rhelmet','#7E57C2','Kypärät'),it('rh_stars','Tähtikypärä',300,'rhelmet','stars','Kypärät','#243B6B'),
+  it('rv_red','Punainen liivi',80,'rvest','#C8372D','Liivit'),it('rv_blue','Sininen liivi',80,'rvest','#2F6DB5','Liivit'),it('rv_green','Vihreä liivi',80,'rvest','#3C8A4E','Liivit'),
+  it('rv_neon','Heijastinliivi',150,'rvest','#C6FF00','Liivit'),it('rv_plaid','Ruudullinen liivi',200,'rvest','p:plaid:#C8372D:#243B6B','Liivit'),it('rv_heart','Sydänliivi',240,'rvest','p:hearts:#FFFFFF:#E0457F','Liivit'),
+  it('rb_black','Mustat ratsastussaappaat',90,'rboots','#22252B','Saappaat'),it('rb_brown','Ruskeat ratsastussaappaat',90,'rboots','#6B3A1E','Saappaat'),it('rb_red','Punaiset kumisaappaat',100,'rboots','#C8372D','Saappaat'),
+  it('rb_pink','Pinkit kumisaappaat',100,'rboots','#F08CB4','Saappaat'),it('rb_gold','Kultaiset saappaat',550,'rboots','#E0A800','Saappaat')];
 SHOP.dog=[
   it('c_red','Punainen kaulapanta',40,'collar','#D7263D','Kaulapannat'),it('c_blue','Sininen kaulapanta',40,'collar','#1F5FA8','Kaulapannat'),it('c_green','Vihreä kaulapanta',40,'collar','#3C8A4E','Kaulapannat'),
   it('c_pink','Pinkki kaulapanta',50,'collar','#F06AA0','Kaulapannat'),it('c_purple','Violetti kaulapanta',50,'collar','#7E57C2','Kaulapannat'),it('c_check','Ruudullinen kaulapanta',140,'collar','p:check:#D7263D:#FFFFFF','Kaulapannat'),
@@ -5181,12 +5189,13 @@ function viewShop2(){ setTheme(); const list=(SHOP[theme()]||SHOP.horse).slice()
   const owned=list.filter(x=>g.owned.includes(x.id)).length, next=list.filter(x=>!g.owned.includes(x.id)).sort((a,b)=>a.cost-b.cost)[0];
   const items=list.filter(x=>(x.cat||'Muut')===SHOP_CAT).sort((a,b)=>a.cost-b.cost);
   $('#app').innerHTML=`${header()}<div class="stack" style="margin-top:16px"><div class="row" style="justify-content:space-between"><h2>Kauppa</h2><span class="pill coin">${COIN} ${S.coins}</span></div>
-  <div class="card scenecard">${previewScene()}</div>
+  <div class="card scenecard">${use3d()?slot3d('preview'):withTry(previewScene)}</div>
+  ${SHOP_TRY?`<div class="calm row" style="justify-content:space-between; gap:8px"><span>Esikatselu: <b>${esc(SHOP_TRY.name)}</b>${g.owned.includes(SHOP_TRY.id)?'':' (ei vielä ostettu)'}</span><button class="btn ghost" data-act="try" data-v="${SHOP_TRY.id}" style="padding:8px 12px">Lopeta</button></div>`:`<p class="small muted" style="margin:0">Napauta tuotetta, niin näet miltä se näyttää. Se tulee omaksi vasta, kun ostat sen.</p>`}
   <div class="card stack" style="gap:6px"><span class="small"><b>${owned}/${list.length}</b> tavaraa omana.${next?` Halvin seuraava: <b>${esc(next.name)}</b> · ${next.cost} ${COIN}${S.coins<next.cost?` (puuttuu ${next.cost-S.coins})`:''}`:' Kaikki kerätty – olet todellinen keräilijä!'}</span>
     <div class="goal"><i style="width:${Math.round(owned/list.length*100)}%"></i></div></div>
   <div class="topics">${cats.map(c=>`<button class="chip" data-act="shopcat" data-v="${esc(c)}" aria-pressed="${c===SHOP_CAT}">${esc(c)}</button>`).join('')}</div>
   <div class="shop">${items.map(x=>{ const own=g.owned.includes(x.id);
-    return `<div class="item">${shopSwatch(x)}<span class="stack" style="gap:0; flex:1; min-width:0"><b>${esc(x.name)}</b><span class="small muted">${tierOf(x.cost)}</span></span>${own?`<button class="btn ${on(x)?'ghost':'alt'}" data-act="equip" data-v="${x.id}">${on(x)?'Riisu':'Käytä'}</button>`:`<button class="btn" data-act="buy" data-v="${x.id}" ${S.coins<x.cost?'disabled':''}>Osta · ${x.cost}</button>`}</div>`; }).join('')}</div>
+    return `<div class="item${SHOP_TRY&&SHOP_TRY.id===x.id?' trying':''}" data-act="try" data-v="${x.id}" style="cursor:pointer${SHOP_TRY&&SHOP_TRY.id===x.id?'; outline:3px solid var(--accent); outline-offset:-3px':''}">${shopSwatch(x)}<span class="stack" style="gap:0; flex:1; min-width:0"><b>${esc(x.name)}</b><span class="small muted">${tierOf(x.cost)}</span></span>${own?`<button class="btn ${on(x)?'ghost':'alt'}" data-act="equip" data-v="${x.id}">${on(x)?'Riisu':'Käytä'}</button>`:`<button class="btn" data-act="buy" data-v="${x.id}" ${S.coins<x.cost?'disabled':''}>Osta · ${x.cost}</button>`}</div>`; }).join('')}</div>
   <p class="small muted">Kolikoita saa oikeista vastauksista, päivän tavoitteesta, seikkailuista ja haasteista. Ostetut tavarat pysyvät omina.</p>
   <button class="btn ghost wide" data-act="hub">Takaisin</button></div>`; }
 
@@ -5459,7 +5468,7 @@ document.addEventListener('click', e=>{ const b=e.target.closest('[data-act]'); 
   else if(a==='mgspeak'){ mgSpeak(); }
   else if(a==='endspeak'){ if(window.__endSay) speakSeq([[window.__endSay,'fi-FI']]); }
   else if(a==='mgskip'){ if(R&&R.fin) R.fin(); }
-  else if(a==='hub'){ R=null; viewHub(); window.scrollTo(0,0); }
+  else if(a==='hub'){ R=null; SHOP_TRY=null; viewHub(); window.scrollTo(0,0); }
   else if(a==='care'){ startRound({kind:'care', care:v, count:5}); window.scrollTo(0,0); }
   else if(a==='examlen'){ const L=[10,15,20,30], c=S.examLen||15; S.examLen=L[(L.indexOf(c)+1)%L.length]; save(); SFX.click(); const y=window.scrollY; viewHub(); window.scrollTo(0,y); }
   else if(a==='exam'){ startRound({kind:'exam', count:S.examLen||15}); window.scrollTo(0,0); }
@@ -5501,8 +5510,9 @@ document.addEventListener('click', e=>{ const b=e.target.closest('[data-act]'); 
   else if(a==='avgender'){ S.avatar.gender=v; if(!stylesFor().some(x=>x[0]===S.avatar.style)) S.avatar.style='short'; save(); viewAvatar(false); }
   else if(a==='avstyle'){ S.avatar.style=v; save(); viewAvatar(false); }
   else if(a==='shop'){ viewShop(); window.scrollTo(0,0); }
+  else if(a==='try'){ const it=shopItem(v); SHOP_TRY=(SHOP_TRY&&SHOP_TRY.id===v)||!it?null:{id:v, slot:it.slot, val:it.val, name:it.name}; const y=window.scrollY; viewShop(); window.scrollTo(0,y); }
   else if(a==='shopcat'){ SHOP_CAT=v; const y=window.scrollY; viewShop(); window.scrollTo(0,y); }
-  else if(a==='buy'){ const it=shopItem(v); if(it && S.coins>=it.cost && !S.gear.owned.includes(v)){ S.coins-=it.cost; SFX.coin(); S.gear.owned.push(v); S.gear[it.slot]=it.val; save(); toast(it.name+' ostettu!'); viewShop(); } }
+  else if(a==='buy'){ const it=shopItem(v); if(it && S.coins>=it.cost && !S.gear.owned.includes(v)){ S.coins-=it.cost; SFX.coin(); S.gear.owned.push(v); S.gear[it.slot]=it.val; SHOP_TRY=null; save(); toast(it.name+' ostettu!'); viewShop(); } }
   else if(a==='equip'){ const it=shopItem(v); if(it){ S.gear[it.slot]=S.gear[it.slot]===it.val?(it.slot==='bridle'||it.slot==='wreath'||it.slot==='bow'||it.slot==='armband'?false:null):it.val; save(); viewShop(); } }
   else if(a==='adv'){ startAdv(v); }
   else if(a==='advresume'){ viewAdventure(); window.scrollTo(0,0); }
@@ -6137,11 +6147,16 @@ if(!ALLT.includes('ai1_kirjain')) ALLT.push('ai1_kirjain'); S.levels.ai1_kirjain
 function use3d(){ return theme()==='horse' && S.gfx!=='2d' && !!(window.PP3D && PP3D.ok); }
 function slot3d(mode, extra){ return `<div class="pp3d-slot" data-mode="${mode}" style="position:relative; height:${mode==='hub'?'min(62vw,300px)':'min(58vw,280px)'}">${extra||''}</div>`; }
 function mixHex(h,t,f){ const a=parseInt(h.slice(1),16), b=parseInt(t.slice(1),16); const c=[16,8,0].map(k=>Math.round(((a>>k)&255)*(1-f)+((b>>k)&255)*f)); return '#'+c.map(x=>x.toString(16).padStart(2,'0')).join(''); }
-function avatar3d(){ const a=S.avatar||{}; return {skin:(['#E6AE88','#C98A5E','#7A4A2E'])[a.skin]||'#E6AE88', hair:HAIR[a.hair]||HAIR[1], shirt:SHIRT[a.shirt]||SHIRT[0], style:a.style||'short', gender:a.gender||'girl'}; }
+let SHOP_TRY=null;
+const inShop=()=>!!document.querySelector('#app .shop');
+function gearView(){ const g=Object.assign({}, S.gear||{}); if(SHOP_TRY && inShop()) g[SHOP_TRY.slot]=SHOP_TRY.val; return g; }
+function withTry(fn){ if(!SHOP_TRY) return fn(); const g=S.gear, old=g[SHOP_TRY.slot]; g[SHOP_TRY.slot]=SHOP_TRY.val; try{ return fn(); } finally { g[SHOP_TRY.slot]=old; } }
+function gear3d(){ const g=gearView(); return {blanket:g.blanket||null, wraps:g.wraps||null, bonnet:g.bonnet||null, halter:g.halter||null, bridle:g.bridle||null, wreath:g.wreath||null}; }
+function avatar3d(){ const a=S.avatar||{}, gv=gearView(); return {gear:{helmet:gv.rhelmet||null, vest:gv.rvest||null, boots:gv.rboots||null}, skin:(['#E6AE88','#C98A5E','#7A4A2E'])[a.skin]||'#E6AE88', hair:HAIR[a.hair]||HAIR[1], shirt:SHIRT[a.shirt]||SHIRT[0], style:a.style||'short', gender:a.gender||'girl'}; }
 function horseColors(){ const H=S.horse||{coat:0,mane:0}, co=COATS[H.coat]||COATS[0], m=(MANES[H.mane]||MANES[0])[1]; return {main:co[1], dark:co[2], light:mixHex(co[1],'#ffffff',.14), hair:m}; }
 (function(){ const app=document.getElementById('app'); if(!app || !window.MutationObserver) return;
   new MutationObserver(()=>{ const el=app.querySelector('.pp3d-slot'); if(!el || el.dataset.on) return; el.dataset.on='1';
-    if(!use3d()) return; try{ PP3D.mount(el,{mode:el.dataset.mode, pet:S.profile&&S.profile.pet, colors:horseColors(), avatar:avatar3d(), sound:S.sound!==false }); }catch(e){ console.error(e); } }).observe(app,{childList:true}); })();
+    if(!use3d()) return; try{ PP3D.mount(el,{mode:el.dataset.mode, pet:S.profile&&S.profile.pet, colors:horseColors(), avatar:avatar3d(), gear:gear3d(), sound:S.sound!==false }); }catch(e){ console.error(e); } }).observe(app,{childList:true}); })();
 window.__toast=toast;
 /*BOOT*/bootView();
 })();
