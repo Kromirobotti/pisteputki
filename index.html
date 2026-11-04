@@ -2,7 +2,7 @@
 <html lang="fi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1F5FA8">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -289,12 +289,13 @@ ul.steps{margin:0; padding-left:20px} ul.steps li{margin:2px 0}
 </head>
 <body>
 <script>
-window.APP_VERSION='38.1 (4.11.2026)';
+window.APP_VERSION='39.1 (4.11.2026)';
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
 try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
 window.addEventListener('load',()=>{ try{ const k='pisteputki-appver', old=localStorage.getItem(k); localStorage.setItem(k, window.APP_VERSION);
   if(old && old!==window.APP_VERSION) setTimeout(()=>{ if(typeof window.__toast==='function') window.__toast('Peli päivittyi: versio '+window.APP_VERSION); },1200); }catch(e){} });
 </script>
+<script src="pp3d.js?v=39.1"></script>
 
 <div class="wrap" id="app"></div>
 
@@ -2294,7 +2295,7 @@ function previewScene(){ return isLeague()?sceneSVG({bg:tv({football:'pitch',flo
 function viewAvatar(first){ setTheme(); const a=S.avatar, hockey=isHockey();
   const sw=(key,arr,lab)=>arr.map((c,i)=>`<button class="sw" style="background:${c}" data-act="av" data-k="${key}" data-v="${i}" aria-label="${lab} ${i+1}" aria-pressed="${a[key]===i}"></button>`).join('');
   $('#app').innerHTML=`${header()}<div class="stack" style="margin-top:16px"><h2>${first?(isLeague()?'Tee oma hahmosi':isDog()?'Tee oma hahmosi ja koirasi':'Tee oma hahmosi ja hevosesi'):(isLeague()?'Oma hahmo':isDog()?'Oma hahmo ja koira':'Oma hahmo ja hevonen')}</h2>
-  <div class="card scenecard">${previewScene()}</div>
+  <div class="card scenecard">${use3d()?slot3d('preview', `<svg viewBox="0 0 360 220" style="position:absolute; left:0; bottom:0; width:100%; height:100%; pointer-events:none" aria-hidden="true">${kid(40,104,0.75,'horse')}</svg>`):previewScene()}</div>
   <div class="card stack"><span class="label">Iho</span><div class="swatches">${sw('skin',SKIN,'Iho')}</div>
   ${hockey?'':`<span class="label">Hiusten väri</span><div class="swatches">${sw('hair',HAIR,'Hiukset')}</div>
   <span class="label">Kampaus</span><div class="topics">${STYLES.map(([k,l])=>`<button class="chip" data-act="avstyle" data-v="${k}" aria-pressed="${a.style===k}">${l}</button>`).join('')}</div>`}
@@ -2442,7 +2443,7 @@ function miniRide(n, done){ const k=Math.max(3,n), G=192, HX=36, HS=.6, speed=15
 function careMini(care, ok){ const fin=()=>{ SFX.fanfare(); applyCare(care, ok, true); careOutcome(care, ok); };
   R={kind:'mini', care, ok, fin};
   if(isDog()){ if(care==='food') dogFeed(ok, fin); else if(care==='clean') dogBrush(ok, fin); else if(care==='trick') dogTrick(ok, fin); else if(care==='joy') dogWalk(ok, fin); else fin(); return; }
-  if(care==='food') miniFeed(ok, fin); else if(care==='clean') miniBrush(ok, fin); else if(care==='hoof') miniHoof(ok, fin); else if(care==='joy') miniRide(ok, fin); else fin(); }
+  if(care==='food'){ if(use3d() && ok>0){ R={kind:'mini3d', care, ok, fin}; PP3D.mount(null,{mode:'feed', carrots:ok, pet:S.profile.pet, colors:horseColors(), sound:S.sound!==false, say:t=>{ if(autoRead()) speakSeq([[t,'fi-FI']]); }, onDone:()=>fin(), onSkip:()=>fin()}); } else miniFeed(ok, fin); } else if(care==='clean') miniBrush(ok, fin); else if(care==='hoof') miniHoof(ok, fin); else if(care==='joy') miniRide(ok, fin); else fin(); }
 
 /* ================= v12: koiranpentu-teema ================= */
 const DOG_COATS=[['Kerma','#F3E3C8','#E0C9A4'],['Kulta','#D9A45A','#BF8940'],['Suklaa','#7A4A2E','#633A22'],['Musta','#34302E','#221E1C'],['Harmaa','#B3B3B8','#96969C']];
@@ -5194,7 +5195,7 @@ function hubHorse(){ const p=S.profile, m=S.meters;
   const waiting=(next && S.points>=next.req && S.daily.chapters<CHAPTER_CAP) || CH.some((c,i)=>i<S.chaptersOpen && c.adv && !S.advDone[c.adv]);
   const unlock=waiting?`<button class="calm" style="border:0; text-align:left; width:100%" data-act="tostory">Uusi seikkailu odottaa! Katso alta kohta Tarina.</button>`:'';
   $('#app').innerHTML=`${header()}<div class="stack" style="margin-top:16px">
-  <div class="card scenecard">${sceneSVG({bg:isDog()?'home':'stable'})}<div class="txt"><div class="meters"><h2>${esc(p.pet)}</h2>
+  <div class="card scenecard">${use3d()?slot3d('hub'):sceneSVG({bg:isDog()?'home':'stable'})}<div class="txt"><div class="meters"><h2>${esc(p.pet)}</h2>
     ${meterBar('food')}${meterBar('clean')}${meterBar('joy')}</div>
     ${lowestNeed()?`<p class="calm">${fill(needs()[lowestNeed()][1])}</p>`:`<p class="small muted">${fill('{pet} voi hyvin. Mittarit laskevat vähitellen, joten muista hoitaa häntä joka päivä.')}</p>`}
     <div class="actions"><button class="btn ghost" data-act="avatar">Oma hahmo</button><button class="btn ghost" data-act="shop">Kauppa · ${S.coins}</button></div></div></div>
@@ -5257,6 +5258,7 @@ function viewSettings(confirming){ const p=S.profile;
   ${confirming?`<p class="calm">Pelaajan ${esc(p.name)} pisteet, tarina ja osaaminen poistetaan. Muiden pelaajien tiedot säilyvät. Oletko varma?</p><div class="row"><button class="btn" data-act="reset">Kyllä, aloita alusta</button><button class="btn ghost" data-act="settings">Peruuta</button></div>`
   :`<button class="btn ghost wide" data-act="askreset">Aloita alusta (vain ${esc(p.name)})</button>`}
   <button class="btn ghost wide" data-act="sound">Äänet: ${S.sound===false?'pois':'päällä'}</button>
+  ${(window.PP3D&&PP3D.ok&&theme()==='horse')?`<button class="btn ghost wide" data-act="gfx">Grafiikka: ${S.gfx==='2d'?'2D (kevyt)':'3D'}</button>`:''}
   <button class="btn ghost wide" data-act="autoread">Lue tehtävät ääneen automaattisesti: ${autoRead()?'päällä':'pois'}</button>
   <p class="small muted">Puheääni tulee laitteen omasta puhesynteesistä. iPhonessa ja iPadissa pehmeämmän äänen voi yleensä ladata Saavutettavuus-asetusten puheasetuksista: Asetukset → Saavutettavuus → näön kohdalta ääneenluvun asetukset (nimi vaihtelee iOS-version ja kielen mukaan) → Äänet → Suomi → valitse ääni, jossa on merkintä parannettu tai premium, ja lataa se Wi-Fi-yhteydellä. Nopein tapa löytää kohta on kirjoittaa Asetusten hakukenttään ”Äänet”. Sulje ja avaa peli latauksen jälkeen.</p>
   <button class="btn alt wide" data-act="hub">Takaisin peliin</button>${window.APP_VERSION?`<p class="small muted center" style="margin-top:8px">Versio ${window.APP_VERSION}</p>`:''}</div></div>`; }
@@ -5478,6 +5480,7 @@ document.addEventListener('click', e=>{ const b=e.target.closest('[data-act]'); 
   else if(a==='next'){ advance(); window.scrollTo(0,0); }
   else if(a==='quit'){ const st=R&&R.kind==='story'; R=null; st?viewAdventure():viewHub(); window.scrollTo(0,0); }
   else if(a==='speak'){ speakQ(); }
+  else if(a==='gfx'){ S.gfx=S.gfx==='2d'?'3d':'2d'; save(); viewSettings(false); }
   else if(a==='autoread'){ S.autoRead=!autoRead(); save(); viewSettings(false); }
   else if(a==='settings'){ viewSettings(false); }
   else if(a==='avatar'){ viewAvatar(false); window.scrollTo(0,0); }
@@ -6122,6 +6125,15 @@ function genAi1(lvl){ const maxL=lvl===1?4:lvl===2?5:7, pool=PIC12.filter(([w])=
 Object.assign(GEN,{ai1_kirjain:genAi1}); TOPIC.ai1_kirjain={name:'Kuva ja kirjain'};
 SUBJ[1].find(x=>x.id==='ai').areas.unshift('ai1_kirjain');
 if(!ALLT.includes('ai1_kirjain')) ALLT.push('ai1_kirjain'); S.levels.ai1_kirjain=S.levels.ai1_kirjain||1; S.hist.ai1_kirjain=S.hist.ai1_kirjain||[];
+
+/* ===== v39: 3D-hevonen (PP3D-moottori, ks. pilot3d/src/engine.js) ===== */
+function use3d(){ return theme()==='horse' && S.gfx!=='2d' && !!(window.PP3D && PP3D.ok); }
+function slot3d(mode, extra){ return `<div class="pp3d-slot" data-mode="${mode}" style="position:relative; height:${mode==='hub'?'min(62vw,300px)':'min(58vw,280px)'}">${extra||''}</div>`; }
+function mixHex(h,t,f){ const a=parseInt(h.slice(1),16), b=parseInt(t.slice(1),16); const c=[16,8,0].map(k=>Math.round(((a>>k)&255)*(1-f)+((b>>k)&255)*f)); return '#'+c.map(x=>x.toString(16).padStart(2,'0')).join(''); }
+function horseColors(){ const H=S.horse||{coat:0,mane:0}, co=COATS[H.coat]||COATS[0], m=(MANES[H.mane]||MANES[0])[1]; return {main:co[1], dark:co[2], light:mixHex(co[1],'#ffffff',.14), hair:m}; }
+(function(){ const app=document.getElementById('app'); if(!app || !window.MutationObserver) return;
+  new MutationObserver(()=>{ const el=app.querySelector('.pp3d-slot'); if(!el || el.dataset.on) return; el.dataset.on='1';
+    if(!use3d()) return; try{ PP3D.mount(el,{mode:el.dataset.mode, pet:S.profile&&S.profile.pet, colors:horseColors(), sound:S.sound!==false }); }catch(e){ console.error(e); } }).observe(app,{childList:true}); })();
 window.__toast=toast;
 /*BOOT*/bootView();
 })();
