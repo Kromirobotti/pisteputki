@@ -258,6 +258,15 @@ svg.scene{width:100%; display:block; border-radius:16px; background:#BFE3F5}
 .colstatic{display:grid; grid-template-columns:22px repeat(var(--n),26px); gap:2px 2px; justify-content:start; font-size:22px; font-weight:800; font-variant-numeric:tabular-nums; margin:4px 0}
 .colstatic .cs{text-align:center; min-height:24px} .colstatic .mk{font-size:15px; color:#D7263D; min-height:18px} .colstatic .ln{border-top:2px solid currentColor}
 .nw{white-space:nowrap}
+/* v29: pienten (1.–2. lk) isommat napit ja tekstit */
+body.g12 .prompt{font-size:24px}
+body.g12 .opt{min-height:76px; font-size:23px; overflow-wrap:normal; hyphens:manual}
+body.g12 .opts{gap:12px}
+.opts.emo .opt{font-size:44px; line-height:1.1}
+body.g12 .speak{padding:10px 14px; font-size:16px}
+.rdhost{position:relative; padding-right:52px!important}
+.rdbtn{position:absolute; top:8px; right:8px; width:40px; height:40px; border-radius:50%; border:2px solid var(--line); background:var(--card); display:flex; align-items:center; justify-content:center; padding:0; color:inherit; z-index:2}
+.rdbtn svg{width:20px; height:20px}
 .chcard{border:3px solid #F97316}
 .chrow{border-top:2px dashed var(--line); padding-top:10px}
 .chbar{height:10px; border-radius:6px; background:var(--line); overflow:hidden}
@@ -280,13 +289,12 @@ ul.steps{margin:0; padding-left:20px} ul.steps li{margin:2px 0}
 </head>
 <body>
 <script>
-window.APP_VERSION='28.1 (21.10.2026)';
+window.APP_VERSION='38.1 (4.11.2026)';
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
 try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
 window.addEventListener('load',()=>{ try{ const k='pisteputki-appver', old=localStorage.getItem(k); localStorage.setItem(k, window.APP_VERSION);
-  if(old && old!==window.APP_VERSION && typeof toast==='function') setTimeout(()=>toast('Peli päivittyi: versio '+window.APP_VERSION),1200); }catch(e){} });
+  if(old && old!==window.APP_VERSION) setTimeout(()=>{ if(typeof window.__toast==='function') window.__toast('Peli päivittyi: versio '+window.APP_VERSION); },1200); }catch(e){} });
 </script>
-
 
 <div class="wrap" id="app"></div>
 
@@ -404,7 +412,7 @@ function speak(html, lang){
     const d=document.createElement('div'); d.innerHTML=html;
     d.querySelectorAll('.fr').forEach(f=>f.replaceWith(' '+f.dataset.say+' '));
     const u=new SpeechSynthesisUtterance(d.textContent.replace(/\s+/g,' ').trim());
-    u.lang=lang||'fi-FI'; u.rate=.92; speechSynthesis.cancel(); speechSynthesis.speak(u);
+    u.lang=lang||'fi-FI'; try{ const bv=bestVoice(u.lang); if(bv) u.voice=bv; }catch(e){} u.rate=.92; speechSynthesis.cancel(); speechSynthesis.speak(u);
   }catch(e){}
 }
 const SPK='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
@@ -2165,7 +2173,7 @@ const CHAPTERS6=[
   {req:450, title:'Maastokisa', adv:'maastokisa', text:'Kartta, rastit ja valinta oikotien ja pitkän reitin välillä.'},
   {req:700, title:'Aluemestaruus', adv:'aluemestaruus', text:'Kauden tärkein kisa. Kaikki aiemmat valinnat näkyvät lopussa.'}
 ];
-const chList=()=>{ const g6=sg()===6; if(isDog()) return g6?CHAPTERS_DOG6:CHAPTERS_DOG; return g6?CHAPTERS6:CHAPTERS; };
+const chList=()=>{ const g=sg(); if(isDog()) return g===6?CHAPTERS_DOG6:(g===1&&typeof CHAPTERS_DOG1!=='undefined')?CHAPTERS_DOG1:CHAPTERS_DOG; return g===6?CHAPTERS6:(g===1&&typeof CHAPTERS1!=='undefined')?CHAPTERS1:CHAPTERS; };
 const HADV={3:[['maskotti',1],['maila',2],['kummitus',3]], 6:[['scout',1],['taulu',2],['kapteeni',3]]};
 Object.assign(ADV,{
   /* ---- Jääkiekko, 3. luokka: lisää ---- */
@@ -2232,10 +2240,10 @@ Object.assign(ADV,{
 });
 const HPOOL={3:{normal:['maskotti','kummitus','bussi','sam','synttarit'], lucky:['maila','sukat']},
              6:{normal:['scout','kapteeni','haastattelu','tukholma','budjetti'], lucky:['taulu','rituaali']}};
-function seasonAdvs(){ const s=S.season, g=sg()===6?6:3;
-  if(!s.hadv || s.hadv.some(id=>!ADV[id])){
+function seasonAdvs(){ const s=S.season, g=sg()===6?6:(sg()===1&&(lg().pool||HPOOL)[1])?1:3;
+  if(!s.hadv || s.hadv.some(id=>!ADV[id]) || (g===1 && !(s.advs||[]).length && s.hadv.some(id=>!/^(hk1|fb1|sb1)_/.test(id)))){
     const played=(s.advs||[]).concat(s.advDone?['maila']:[]);
-    if(played.length && isHockey()) s.hadv=HADV[g].map(x=>x[0]);
+    if(played.length && isHockey() && HADV[g]) s.hadv=HADV[g].map(x=>x[0]);
     else { const prev=S.lastHadv||[], P=(lg().pool||HPOOL)[g];
       const pref=a=>{ const fresh=a.filter(x=>!prev.includes(x)); return shuffle(fresh.length?fresh:a); };
       const n=pref(P.normal), second=n[1]||shuffle(P.normal.filter(x=>x!==n[0]))[0];
@@ -2251,7 +2259,7 @@ function handsQ(h,m,prompt){ const ideal=((h%12)+m/60)*30;
     check:u=>{ const d=Math.abs(((u.ha-ideal)%360+540)%360-180); return {ok:u.ma===m*6 && d<=10}; },
     explain:`Pitkä viisari kohtaan ${m===0?'12':m/5} (${m} min). Lyhyt viisari ${m===0?`suoraan kohtaan ${h%12||12}`:`numeroiden ${h%12||12} ja ${(h%12)+1} väliin`}.<div class="visual" style="margin-top:8px">${clockSVG(h,m,'mini2')}</div>`}; }
 function storyQ(task){ let q; const g=S.profile.grade; const subj=subjFor(task.subj||(task.slot!=null?['ma','ai','en'][task.slot]:null));
-  const tp=(task.h!=null && g<=4)?'clock':recommend(subj);
+  const tp=(task.h!=null && g>=3 && g<=4)?'clock':recommend(subj);
   if(tp==='clock' && task.h!=null) q=handsQ(task.h, task.m, vfill(task.say));
   else { for(let k=0;k<8;k++){ q=GEN[tp](S.levels[tp]); if(q.type!=='memory') break; }
     q.prompt=`<span class="small muted" style="display:block; font-weight:800; margin-bottom:4px">${vfill(task.other)} (${subjOf(tp).name}: ${TOPIC[tp].name})</span>${q.prompt}`; }
@@ -2268,7 +2276,8 @@ function viewAdventure(){ setTheme(); const A=ADV[S.adv.id], n=A.nodes[S.adv.nod
   else actions=`<button class="btn wide" data-act="advnext">Jatka</button>`;
   $('#app').innerHTML=`${header()}<div class="stack" style="margin-top:16px"><div class="qhead"><h3>${esc(A.title)}</h3><button class="speak" data-act="advspeak">${SPK} Kuuntele</button></div>
   <div class="card scenecard">${sceneSVG(n)}<div class="txt"><p class="storytext">${vfill(n.text)}</p>${S.adv.failed?'<p class="calm">Melkein! Kokeillaan toista tehtävää.</p>':''}${actions}</div></div>
-  <button class="btn ghost" data-act="advquit">Keskeytä seikkailu</button></div>`; }
+  <button class="btn ghost" data-act="advquit">Keskeytä seikkailu</button></div>`;
+  if(autoRead()) setTimeout(speakAdv,350); }
 function finishAdv(){ SFX.fanfare(); const id=S.adv.id, A=ADV[id]; let msg='Seikkailu suoritettu!';
   if(A.daily){ const L=dailyList()||[]; if(L[wdIdx()]===id && !(S.dailyDoneDate===today()&&S.dailyDoneId===id)){ S.dailyDoneDate=today(); S.dailyDoneId=id; S.coins+=advCoins(A.reward); msg+=` +${advCoins(A.reward)} kolikkoa`; } S.advDone[id]=true; }
   else if(!S.advDone[id]){ S.advDone[id]=true; S.coins+=advCoins(A.reward); msg+=` +${advCoins(A.reward)} kolikkoa`; }
@@ -2308,7 +2317,7 @@ function header(){ const pct=Math.min(100, S.daily.tasks/DAILY_GOAL*100);
   <div class="pills"><span class="pill pts" title="Pisteet">${S.points} p</span>${S.profile?`<span class="pill coin" title="Kolikot">${COIN}${S.coins}</span>`:''}${S.profile?`<span class="pill streakpill" title="Pisteputki">${FLAME.replace('width="34" height="34"','width="16" height="16"')}${streakNow()}</span>`:`<span class="pill" title="Päivän tavoite">${S.daily.tasks}/${DAILY_GOAL}</span>`}
   ${S.profile?`<button class="iconbtn" data-act="settings" aria-label="Asetukset"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>`:''}</div></div>
   <div class="goal" aria-label="Päivän tavoite ${S.daily.tasks} / ${DAILY_GOAL}"><i style="width:${pct}%"></i></div>`; }
-function setTheme(){ document.body.className='t-'+theme(); }
+function setTheme(){ document.body.className='t-'+theme()+(S.profile&&S.profile.grade<=2?' g12':''); }
 let draft={name:'', grade:3, theme:'horse', pet:'Kaneli'};
 function viewSetup(){ document.body.className='t-setup';
   const petLabel=themeInfo(draft.theme).petLabel;
@@ -2316,11 +2325,8 @@ function viewSetup(){ document.body.className='t-setup';
   <div class="hero stack"><div class="brand">${LOGO}</div><h1>Pisteputki</h1><p class="sub">Pelaa itsesi taitavaksi.</p></div>
   <div class="card stack"><label class="label" for="f-name">Sinun nimesi</label><input type="text" id="f-name" autocomplete="off" maxlength="16" placeholder="Kirjoita nimesi" value="${esc(draft.name)}"></div>
   <div class="card stack"><span class="label">Luokka</span><div class="choices">
-    <button class="choice" data-act="grade" data-v="3" aria-pressed="${draft.grade===3}"><b>3. luokka</b><span class="small muted">Kellonajat, kertotaulut, aakkoset, sanaluokat, englannin sanat, luonto…</span></button>
-    <button class="choice" data-act="grade" data-v="4" aria-pressed="${draft.grade===4}"><b>4. luokka</b><span class="small muted">Jakolasku, murtoluvut, mittayksiköt, verbit, Suomen kartta, esihistoria…</span></button>
-    <button class="choice" data-act="grade" data-v="5" aria-pressed="${draft.grade===5}"><b>5. luokka</b><span class="small muted">Desimaali- ja murtoluvut, sijamuodot, aikamuodot, Eurooppa, keskiaika…</span></button>
-    <button class="choice" data-act="grade" data-v="6" aria-pressed="${draft.grade===6}"><b>6. luokka</b><span class="small muted">Murtoluvut, prosentit, sijamuodot, englannin verbit, biologia…</span></button>
-  </div><p class="small muted">Aineet: ${(n=>n.slice(0,-1).join(', ')+' ja '+n[n.length-1])(SUBJ[draft.grade].map((x,i)=>i?x.name.toLowerCase():x.name))}.</p></div>
+    ${Object.keys(SUBJ).map(Number).sort((a,b)=>a-b).map(n=>`<button class="choice" data-act="grade" data-v="${n}" aria-pressed="${draft.grade===n}"><b>${n}. luokka</b><span class="small muted">${GRADE_DESC[n]||''}</span></button>`).join('')}
+  </div><p class="small muted">Aineet: ${(n=>n.length<2?n.join(''):n.slice(0,-1).join(', ')+' ja '+n[n.length-1])(SUBJ[draft.grade].map((x,i)=>i?x.name.toLowerCase():x.name))}.</p></div>
   <div class="card stack"><span class="label">Teema</span>${themeCards(draft.theme,'theme')}<p class="small muted">Teeman voi vaihtaa myöhemmin asetuksista. Pisteet ja osaaminen säilyvät.</p></div>
   <div class="card stack"><label class="label" for="f-pet">${petLabel}</label><input type="text" id="f-pet" autocomplete="off" maxlength="24" value="${esc(draft.pet)}"></div>
   <button class="btn wide" data-act="start">Aloita peli</button>${IX.ids.length?'<button class="btn ghost wide" data-act="players">Takaisin pelaajiin</button>':''}<button class="btn ghost wide" data-act="backup">Palauta varmuuskopiosta</button></div>`; }
@@ -2372,7 +2378,8 @@ function careOutcome(care, ok){ const o=pick((isDog()?CARE_OUT_DOG:CARE_OUT)[car
   $('#app').innerHTML=`${header()}<div class="stack" style="margin-top:16px"><div class="card scenecard"><div class="hop">${sceneSVG({bg:o.bg, extras:o.extras})}</div>
     <div class="txt"><h2>${ok}/5 oikein</h2><p class="storytext">${fill(o.t)}</p>
     <div class="meters">${meterBar('food')}${meterBar('clean')}${meterBar('joy')}</div>
-    <button class="btn wide" data-act="hub">${tv({horse:'Takaisin talliin',dog:'Takaisin kotiin'})}</button><button class="btn ghost wide" data-act="care" data-v="${care}">Hoida lisää</button></div></div></div>`; }
+    <button class="btn wide" data-act="hub">${tv({horse:'Takaisin talliin',dog:'Takaisin kotiin'})}</button><button class="btn ghost wide" data-act="care" data-v="${care}">Hoida lisää</button></div></div></div>`;
+  if(small()){ addReadBtns(); if(autoRead()) setTimeout(()=>speakSeq([[`${ok} viidestä oikein. `+plainTxt(fill(o.t)),'fi-FI']]),500); } }
 
 /* ---------- minigames ---------- */
 const svgPt=(svg,e)=>{ const p=svg.createSVGPoint(); p.x=e.clientX; p.y=e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); };
@@ -2381,9 +2388,9 @@ function miniGate(svg, label, steps, go){ const jb=$('#jumpbtn'); jb.style.displ
   box.className='mggate stack'; box.style.cssText='padding:12px 16px 0; gap:8px';
   box.innerHTML=`<b>Näin pelaat</b><ol style="margin:0; padding-left:22px; line-height:1.5">${steps.map(x=>`<li>${x}</li>`).join('')}</ol><button class="btn wide" id="mgstart">${label}</button>`;
   wrap.parentNode.insertBefore(box, wrap); $('#mgstart').addEventListener('click',()=>{ box.remove(); jb.style.display=''; svg.dataset.go='1'; go(); }); }
-function miniShell(title, hint, svg){ $('#app').innerHTML=`${header()}<div class="stack" style="margin-top:16px"><div class="qhead"><h3>${title}</h3><span class="pill" id="mg-count"></span></div>
+function miniShell(title, hint, svg){ $('#app').innerHTML=`${header()}<div class="stack" style="margin-top:16px"><div class="qhead"><h3>${title}</h3><span class="row" style="gap:8px">${small()?`<button class="speak" data-act="mgspeak" aria-label="Kuuntele ohje">${SPK}</button>`:''}<span class="pill" id="mg-count"></span></span></div>
   <div class="card scenecard mg">${svg}<div class="txt"><p class="storytext" id="mg-text">${hint}</p><div class="goal"><i id="mg-bar" style="width:0%"></i></div>
-  <button class="btn ghost" data-act="mgskip">Ohita</button></div></div></div>`; }
+  <button class="btn ghost" data-act="mgskip">Ohita</button></div></div></div>`; mgVoice(); }
 const CARROT='<path d="M-6 -2 L0 28 L6 -2 Z" fill="#F08A24" stroke="#C0661A" stroke-width="1.5"/><path d="M-3 -2 L-6 -12 M0 -2 L0 -14 M3 -2 L6 -12" stroke="#3C7A45" stroke-width="3" stroke-linecap="round"/>';
 function miniFeed(n, done){ const mouth={x:165+157*1.08, y:86+37*1.08}; let left=n;
   const carrots=Array.from({length:n},(_,i)=>`<g class="drag" data-i="${i}" transform="translate(${30+i*24} 176)" style="cursor:grab">${CARROT}<rect x="-14" y="-16" width="28" height="48" fill="transparent"/></g>`).join('');
@@ -3012,7 +3019,7 @@ const WEEKDAYS=['maanantai','tiistai','keskiviikko','torstai','perjantai','lauan
 const wdIdx=()=>(new Date().getDay()+6)%7;
 const DAILY={horse:{3:['hd3_porkkana','hd3_sade','hd3_kengittaja','hd3_piknik','hd3_disko','hd3_jarvi','hd3_tahdet'], 6:['hd6_hoitaja','hd6_rehu','hd6_elainlaakari','hd6_passi','hd6_some','hd6_vaellus','hd6_ravuri']},
   dog:{3:['dd3_posti','dd3_kylpy','dd3_pallo','dd3_kirjasto','dd3_pizza','dd3_lumi','dd3_mummola'], 6:['dd6_lukukoira','dd6_budjetti','dd6_rokotus','dd6_loytokoira','dd6_talkoot','dd6_vieraskoira','dd6_historia']}};
-const dailyList=()=>{ const t=DAILY[theme()]; return t?t[sg()===6?6:3]:null; };
+const dailyList=()=>{ const t=DAILY[theme()]; return t?t[sg()===6?6:(sg()===1&&t[1])?1:3]:null; };
 function dailyCard(){ const L=dailyList(); if(!L) return ''; const i=wdIdx(), id=L[i], A=ADV[id], doneToday=S.dailyDoneDate===today()&&S.dailyDoneId===id;
   const book=L.map((x,k)=>[x,k]).filter(([x])=>S.advDone[x]);
   return `<div class="card stack dailycard"><div class="row" style="justify-content:space-between"><span class="label">Päivän seikkailu · ${WEEKDAYS[i]}</span><span class="pill">${book.length}/7 kirjassa</span></div>
@@ -5176,7 +5183,7 @@ function viewShop2(){ setTheme(); const list=(SHOP[theme()]||SHOP.horse).slice()
   <p class="small muted">Kolikoita saa oikeista vastauksista, päivän tavoitteesta, seikkailuista ja haasteista. Ostetut tavarat pysyvät omina.</p>
   <button class="btn ghost wide" data-act="hub">Takaisin</button></div>`; }
 
-function viewHub(){ setTheme(); decay(); isLeague()?hubHockey():hubHorse(); }
+function viewHub(){ setTheme(); decay(); isLeague()?hubHockey():hubHorse(); addReadBtns(); }
 function hubHorse(){ const p=S.profile, m=S.meters;
   const bar=(l,v)=>`<div class="meter"><span>${l}</span><span class="bar"><i style="width:${v}%"></i></span></div>`;
   const CH=chList(), next=CH[S.chaptersOpen];
@@ -5194,7 +5201,7 @@ function hubHorse(){ const p=S.profile, m=S.meters;
   ${chCard()}
   ${S.adv?`<button class="btn wide" data-act="advresume">Jatka seikkailua: ${ADV[S.adv.id].title}</button>`:''}
   ${topicPicker()}
-  <div class="stack"><span class="label">${isDog()?'Hoida koiraa':'Hoida hevosta'} (5 tehtävää)</span><div class="actions">
+  <div class="stack carebox"><span class="label">${isDog()?'Hoida koiraa':'Hoida hevosta'} (5 tehtävää)</span><div class="actions">
     ${Object.entries(careDef()).map(([k,c],i)=>`<button class="btn ${i%2?'alt':''} ${(lowestNeed()===k||(lowestNeed()==='clean'&&k==='hoof'&&false))?'pulse':''}" data-act="care" data-v="${k}">${c.label}<small>${c.desc}</small></button>`).join('')}
   </div></div>
   ${dailyCard()}
@@ -5233,10 +5240,10 @@ function hubHockey(){ const p=S.profile, s=S.season, st=seasonStats();
   <p class="small">Harjoittele kokeeseen: tehtävät vaikeutuvat loppua kohti, ja lopuksi saat arvosanaennusteen ja prosentin.${topic()==='mix:all'?' Valitse yltä aine tai aihealue, jota koe koskee.':''}</p>
   <button class="btn alt wide" data-act="exam">Aloita koe: ${labelOf(topic())}</button></div>
   ${koeCard()}</div>`; }
-const GRADE_DESC={3:'Kellonajat, kertotaulut, aakkoset, sanaluokat, englannin sanat, luonto…',4:'Jakolasku, murtoluvut, mittayksiköt, verbit, Suomen kartta, esihistoria…',5:'Desimaali- ja murtoluvut, sijamuodot, aikamuodot, Eurooppa, keskiaika…',6:'Murtoluvut, prosentit, sijamuodot, englannin verbit, biologia…'};
+const GRADE_DESC={1:'Luvut 0–20, yhteen- ja vähennyslasku, muodot ja kuviot (lisää aineita tulossa)',3:'Kellonajat, kertotaulut, aakkoset, sanaluokat, englannin sanat, luonto…',4:'Jakolasku, murtoluvut, mittayksiköt, verbit, Suomen kartta, esihistoria…',5:'Desimaali- ja murtoluvut, sijamuodot, aikamuodot, Eurooppa, keskiaika…',6:'Murtoluvut, prosentit, sijamuodot, englannin verbit, biologia…'};
 function viewGradeSwitch(){ const g=S.profile.grade;
-  $('#app').innerHTML=`${header()}<div class="stack" style="margin-top:16px"><div class="card stack"><h2>Vaihda luokka</h2><p class="small muted">Pisteet, kolikot, tarina ja osaaminen säilyvät. Tehtävät vaihtuvat valitun luokan mukaisiksi.</p>
-  <div class="choices">${Object.keys(SUBJ).map(Number).sort((a,b)=>a-b).map(n=>`<button class="choice" data-act="gradeset" data-v="${n}" aria-pressed="${g===n}"><b>${n}. luokka</b><span class="small muted">${GRADE_DESC[n]||''}</span></button>`).join('')}</div>
+  $('#app').innerHTML=`${header()}<div class="stack" style="margin-top:16px"><div class="card stack"><h2>Vaihda luokka</h2><p class="small muted">Jokaisella luokalla on omat pisteet, kolikot, ostokset ja tarinan eteneminen. Ne eivät siirry luokalta toiselle, mutta säilyvät, kun palaat takaisin. Osaaminen ja oma hahmo ovat yhteisiä.</p>
+  <div class="choices">${Object.keys(SUBJ).map(Number).sort((a,b)=>a-b).map(n=>`<button class="choice" data-act="gradeset" data-v="${n}" aria-pressed="${g===n}"><b>${n}. luokka</b><span class="small muted">${GRADE_DESC[n]||''}</span><span class="small" style="font-weight:800">${(w=>`${w.points||0} p · ${w.coins||0} kolikkoa`)(g===n?S:((S.gw||{})[n]||{}))}</span></button>`).join('')}</div>
   <button class="btn ghost wide" data-act="settings">Takaisin</button></div></div>`; }
 function viewSettings(confirming){ const p=S.profile;
   $('#app').innerHTML=`${header()}<div class="stack" style="margin-top:16px"><div class="card stack"><h2>Asetukset</h2>
@@ -5250,7 +5257,9 @@ function viewSettings(confirming){ const p=S.profile;
   ${confirming?`<p class="calm">Pelaajan ${esc(p.name)} pisteet, tarina ja osaaminen poistetaan. Muiden pelaajien tiedot säilyvät. Oletko varma?</p><div class="row"><button class="btn" data-act="reset">Kyllä, aloita alusta</button><button class="btn ghost" data-act="settings">Peruuta</button></div>`
   :`<button class="btn ghost wide" data-act="askreset">Aloita alusta (vain ${esc(p.name)})</button>`}
   <button class="btn ghost wide" data-act="sound">Äänet: ${S.sound===false?'pois':'päällä'}</button>
-  <button class="btn alt wide" data-act="hub">Takaisin peliin</button>${window.APP_VERSION?`<p class="small muted center">Versio ${window.APP_VERSION}</p>`:''}</div></div>`; }
+  <button class="btn ghost wide" data-act="autoread">Lue tehtävät ääneen automaattisesti: ${autoRead()?'päällä':'pois'}</button>
+  <p class="small muted">Puheääni tulee laitteen omasta puhesynteesistä. iPhonessa ja iPadissa pehmeämmän äänen voi yleensä ladata Saavutettavuus-asetusten puheasetuksista: Asetukset → Saavutettavuus → näön kohdalta ääneenluvun asetukset (nimi vaihtelee iOS-version ja kielen mukaan) → Äänet → Suomi → valitse ääni, jossa on merkintä parannettu tai premium, ja lataa se Wi-Fi-yhteydellä. Nopein tapa löytää kohta on kirjoittaa Asetusten hakukenttään ”Äänet”. Sulje ja avaa peli latauksen jälkeen.</p>
+  <button class="btn alt wide" data-act="hub">Takaisin peliin</button>${window.APP_VERSION?`<p class="small muted center" style="margin-top:8px">Versio ${window.APP_VERSION}</p>`:''}</div></div>`; }
 
 /* ================= rounds ================= */
 let R=null;
@@ -5301,7 +5310,7 @@ function renderQ(fbHTML){ const q=R.q;
   else { const dots=Array.from({length:R.count},(_,k)=>`<i class="${k<R.results.length?(R.results[k]?'ok':'no'):(k===R.i?'cur':'')}"></i>`).join('');
     top=`<div class="qhead"><h3>${roundTitle()}</h3><div class="dots" aria-label="Tehtävä ${R.i+1}/${R.count}">${dots}</div></div>`; }
   let ans='';
-  if(q.type==='mc') ans=`<div class="opts">${q.options.map((o,k)=>`<button class="opt" data-act="opt" data-k="${k}" ${R.answered?'disabled':''}>${esc(o)}</button>`).join('')}</div>`;
+  if(q.type==='mc') ans=`<div class="opts${q.big?' emo':''}">${q.options.map((o,k)=>`<button class="opt" data-act="opt" data-k="${k}" ${R.answered?'disabled':''}>${esc(o)}</button>`).join('')}</div>`;
   else if(q.type==='input') ans=`<form class="stack" data-form="ans"><input type="text" id="f-ans" inputmode="${q.im||'text'}" autocomplete="off" placeholder="${q.ph||''}" ${R.answered?'disabled':''}><button class="btn wide" ${R.answered?'disabled':''}>Vastaa</button></form>`;
   else ans=interactiveHTML(q)+(q.type!=='memory'?`<button class="btn wide" data-act="check" ${R.answered?'disabled':''}>Tarkista</button>`:'');
   $('#app').innerHTML=`${header()}<div class="stack" style="margin-top:16px">${top}
@@ -5310,7 +5319,8 @@ function renderQ(fbHTML){ const q=R.q;
   <div id="fb">${fbHTML||''}</div>
   <button class="btn ghost" data-act="quit">Keskeytä ja palaa</button></div>`;
   mount(q);
-  if(q.type==='input' && !R.answered){ const f=$('#f-ans'); if(f) f.focus({preventScroll:true}); } }
+  if(q.type==='input' && !R.answered){ const f=$('#f-ans'); if(f) f.focus({preventScroll:true}); }
+  if(!R.answered && !fbHTML && autoRead()) setTimeout(()=>{ if(R && R.q===q && !R.answered) speakQ(); },350); }
 
 /* ---------- interactive mounts ---------- */
 function mount(q){ if(R.answered && q.type!=='wheel') return;
@@ -5385,7 +5395,7 @@ function commit(res, ctx){ const q=R.q; R.answered=true; const tp=q.topic||resol
   if(calm) fb+=`<p class="calm" style="margin-top:10px">${isLeague()?'Aikalisä! Valmentaja pyytää lukemaan tehtävät rauhassa. Nopeat arvaukset eivät tee maaleja.':isDog()?fill('{pet} jahtaa häntäänsä, kun vastaukset lentävät noin nopeasti. Lue tehtävä ja mieti hetki.'):fill('{pet} menee ihan pyörryksiin, kun vastaukset lentävät noin nopeasti. Lue tehtävä ja mieti hetki.')}</p>`;
   fb+=`<button class="btn alt wide" id="nextbtn" data-act="next" style="margin-top:12px" ${calm?'disabled':''}>${calm?'Hetki…':'Seuraava'}</button>`;
   chTrack('task',{ok:res.ok, tp, subj:(subjOf(tp)||{}).id, run:S.streak});
-  save(); renderQ(fb);
+  save(); renderQ(fb); { const hd=plainTxt(head).replace(/\s+/g,' ').trim()+(res.ok&&pts===20?' Putkibonus!':''); setTimeout(()=>speakFb(q, res.ok, hd),250); }
   if(q.type==='mc') document.querySelectorAll('.opt').forEach((b,k)=>{ if(q.options[k]===q.answer) b.classList.add('ok'); else if(k===ctx.optIdx) b.classList.add('no'); });
   else if(q.type==='input'){ const f=$('#f-ans'); if(f) f.value=ctx.val; }
   if(calm){ let s=4; const b=$('#nextbtn'); const t=setInterval(()=>{ s--; if(!b.isConnected){clearInterval(t);return;} if(s<=0){ clearInterval(t); b.disabled=false; b.textContent='Seuraava'; } else b.textContent=`Hetki… ${s}`; },1000); }
@@ -5421,7 +5431,10 @@ function endMatch(){ SFX.whistle(); if(R.us>R.them) setTimeout(()=>SFX.fanfare()
   $('#app').innerHTML=`${header()}<div class="stack" style="margin-top:16px">
   <div class="board"><span class="team">${esc(S.profile.pet)}</span><span class="score">${R.us}–${R.them}</span><span class="team r">${esc(R.opp)}</span><span class="per">${R.ot?'Päättyi jatkoajalla':'Lopputulos'}</span></div>
   <div class="card stack center">${win&&R.final?lg().trophy():''}<div class="goalflash">${title}</div><p>${txt}</p>${win?'<p class="small">+30 bonuspistettä voitosta</p>':''}
-  <button class="btn wide" data-act="hub">Jatka</button></div></div>`; }
+  <button class="speak" data-act="endspeak" style="align-self:center">${SPK} Kuuntele</button>
+  <button class="btn wide" data-act="hub">Jatka</button></div></div>`;
+  const t0=plainTxt(title).trim().toLowerCase(), say=`Maaleja ${R.us}, vastustajalla ${R.them}. ${t0.charAt(0).toUpperCase()+t0.slice(1)} ${plainTxt(txt)}${win?' Saat 30 bonuspistettä.':''}`;
+  window.__endSay=say; if(autoRead()) setTimeout(()=>speakSeq([[say,'fi-FI']]), win?1900:900); }
 
 /* ================= events ================= */
 document.addEventListener('click', e=>{ const b=e.target.closest('[data-act]'); if(!b) return; const a=b.dataset.act, v=b.dataset.v; if(!['opt','check','mem','buy','unlock'].includes(a)) SFX.click();
@@ -5435,6 +5448,8 @@ document.addEventListener('click', e=>{ const b=e.target.closest('[data-act]'); 
   else if(a==='topic'){ S.profile.topic=v; save(); viewHub(); }
   else if(a==='subj'){ const x=SUBJ[S.profile.grade].find(y=>y.id===v); S.profile.topic='mix:'+x.id; save(); viewHub(); }
   else if(a==='smart'){ startRound({kind:'practice', count:8, adaptive:true}); window.scrollTo(0,0); }
+  else if(a==='mgspeak'){ mgSpeak(); }
+  else if(a==='endspeak'){ if(window.__endSay) speakSeq([[window.__endSay,'fi-FI']]); }
   else if(a==='mgskip'){ if(R&&R.fin) R.fin(); }
   else if(a==='hub'){ R=null; viewHub(); window.scrollTo(0,0); }
   else if(a==='care'){ startRound({kind:'care', care:v, count:5}); window.scrollTo(0,0); }
@@ -5462,7 +5477,8 @@ document.addEventListener('click', e=>{ const b=e.target.closest('[data-act]'); 
   else if(a==='mem'){ memTap(+b.dataset.i); }
   else if(a==='next'){ advance(); window.scrollTo(0,0); }
   else if(a==='quit'){ const st=R&&R.kind==='story'; R=null; st?viewAdventure():viewHub(); window.scrollTo(0,0); }
-  else if(a==='speak'){ const q=R&&R.q; if(q&&q.sv) speak(q.sv,'sv-SE'); else if(q&&q.en) speak(q.en,'en-GB'); else if(q) speak(q.prompt+(q.type==='mc'?'. Vaihtoehdot: '+q.options.join(', '):'')); }
+  else if(a==='speak'){ speakQ(); }
+  else if(a==='autoread'){ S.autoRead=!autoRead(); save(); viewSettings(false); }
   else if(a==='settings'){ viewSettings(false); }
   else if(a==='avatar'){ viewAvatar(false); window.scrollTo(0,0); }
   else if(a==='av'){ S.avatar[b.dataset.k]=+v; save(); viewAvatar(false); }
@@ -5470,7 +5486,7 @@ document.addEventListener('click', e=>{ const b=e.target.closest('[data-act]'); 
   else if(a==='dc'){ S.dog[b.dataset.k]=+v; save(); viewAvatar(false); }
   else if(a==='themes'){ viewThemeSwitch(null); window.scrollTo(0,0); }
   else if(a==='gradesel'){ viewGradeSwitch(); window.scrollTo(0,0); }
-  else if(a==='gradeset'){ S.profile.grade=+v; S.profile.topic='mix:all'; save(); toast(v+'. luokan tehtävät valittu'); viewHub(); window.scrollTo(0,0); }
+  else if(a==='gradeset'){ switchGrade(+v); S.profile.topic='mix:all'; save(); toast(v+'. luokka valittu: omat pisteet ja kolikot'); viewHub(); window.scrollTo(0,0); }
   else if(a==='tswitch'){ if(v===S.profile.theme){ viewHub(); window.scrollTo(0,0); return; } viewThemeSwitch(v); window.scrollTo(0,0); }
   else if(a==='tswitchgo'){ switchTheme(v, $('#f-tpet').value.trim()); SFX.fanfare(); toast('Teema vaihdettu: '+THEME_NAME[v]); viewAvatar(false); window.scrollTo(0,0); }
   else if(a==='avstyle'){ S.avatar.style=v; save(); viewAvatar(false); }
@@ -5486,7 +5502,8 @@ document.addEventListener('click', e=>{ const b=e.target.closest('[data-act]'); 
   else if(a==='advtask'){ startRound({kind:'story', count:1, node:ADV[S.adv.id].nodes[S.adv.node]}); window.scrollTo(0,0); }
   else if(a==='advend'){ finishAdv(); }
   else if(a==='advquit'){ S.adv=null; save(); viewHub(); window.scrollTo(0,0); }
-  else if(a==='advspeak'){ const n=ADV[S.adv.id].nodes[S.adv.node]; speak(vfill(n.text)); }
+  else if(a==='advspeak'){ speakAdv(); }
+  else if(a==='rd'){ readBlock(b); }
   else if(a==='askreset'){ viewSettings(true); }
   else if(a==='sound'){ S.sound=S.sound===false; save(); if(S.sound) SFX.ok(); viewSettings(false); }
   else if(a==='reset'){ const nm=S.profile?S.profile.name:''; S=fresh(); prepState(); R=null; draft={name:nm, grade:3, theme:'horse', pet:'Kaneli'}; viewSetup(); window.scrollTo(0,0); }
@@ -5513,6 +5530,599 @@ document.addEventListener('click', e=>{ const b=e.target.closest('[data-act]'); 
 document.addEventListener('submit', e=>{ const f=e.target.closest('[data-form="ans"]'); if(!f) return; e.preventDefault(); const i=$('#f-ans'); if(i) answer(i.value); });
 
 /* ================= boot ================= */
+/* ================= v29: 1. luokka – matematiikka ja pienten käyttöliittymä ================= */
+/* Pienille (1.–2. lk): tehtävä luetaan ääneen automaattisesti, isommat napit, enimmäkseen napautuksia. */
+const small=()=>!!(S.profile && S.profile.grade<=2);
+const autoRead=()=>S.autoRead!=null ? !!S.autoRead : small();
+/* v29.1: palautteen ääneenluku – väärän vastauksen jälkeen luetaan oikea vastaus ja lyhyt selitys */
+function plainTxt(h){ const d=document.createElement('div'); d.innerHTML=String(h||''); d.querySelectorAll('.fr').forEach(f=>f.replaceWith(' '+(f.dataset.say||f.textContent)+' ')); d.querySelectorAll('svg,.visual').forEach(x=>x.remove()); return d.textContent.replace(/\p{Extended_Pictographic}|\uFE0F/gu,'').replace(/\s+/g,' ').trim(); }
+/* v29.2: valitaan laitteen paras ääni kielelle (parannetut/neuro-/Google-äänet ensin) */
+let VOICES=[]; const loadVoices=()=>{ try{ VOICES=speechSynthesis.getVoices()||[]; }catch(e){} };
+try{ loadVoices(); speechSynthesis.addEventListener&&speechSynthesis.addEventListener('voiceschanged',loadVoices); }catch(e){}
+function bestVoice(lang){ if(!VOICES.length) loadVoices(); const L=lang.toLowerCase(), base=L.slice(0,2);
+  const cand=VOICES.filter(v=>(v.lang||'').toLowerCase().replace('_','-').startsWith(base)); if(!cand.length) return null;
+  const sc=v=>{ const n=(v.name||'').toLowerCase(); let x=0; if((v.lang||'').toLowerCase().replace('_','-')===L) x+=2;
+    if(/premium|enhanced|parannettu|natural|neural|online/.test(n)) x+=6; if(/google/.test(n)) x+=4; if(/satu|noora|selma|harri/.test(n)) x+=2; if(/compact|eloquence|espeak/.test(n)) x-=5; return x; };
+  return cand.sort((a,b)=>sc(b)-sc(a))[0]; }
+function speakSeq(parts){ try{ if(!('speechSynthesis' in window)) return; speechSynthesis.cancel(); parts.filter(p=>p&&p[0]).forEach(([t,l])=>{ if(!l||l==='fi-FI') t=sayMath(t); const u=new SpeechSynthesisUtterance(t); const bv=bestVoice(l||'fi-FI'); if(bv) u.voice=bv; u.lang=l||'fi-FI'; u.rate=.92; speechSynthesis.speak(u); }); }catch(e){} }
+const sayMath=t=>String(t).replace(/☐/g,'tyhjä').replace(/(\d|tyhjä)\s*−\s*(?=\d|tyhjä)/g,'$1 miinus ').replace(/(\d|tyhjä)\s*\+\s*(?=\d|tyhjä)/g,'$1 plus ').replace(/(\d|tyhjä)\s*·\s*(?=\d|tyhjä)/g,'$1 kertaa ').replace(/([?!])\./g,'$1');
+const SAYSYM={'<':'pienempi kuin','>':'suurempi kuin','=':'yhtä suuri kuin'};
+function speakFb(q, ok, hd){ if(!autoRead()) return;
+  if(ok){ const w=pick(['Oikein!','Hienoa!','Juuri niin!','Mahtavaa!']); speakSeq([[hd?(/^(oikein|hienoa|mahtavaa|juuri|maali|kaksi)/i.test(hd)?hd:w+' '+hd):w,'fi-FI']]); return; }
+  if(q.sayAns){ let ex2=plainTxt(q.explain); speakSeq(q.sayAnsLang?[['Oikea vastaus on','fi-FI'],[q.sayAns,q.sayAnsLang]]:[['Oikea vastaus on '+q.sayAns+'.','fi-FI']].concat(q.sayAnsLang?[]:[])); return; }
+  const ans=SAYSYM[q.answer]||plainTxt(q.answer); let ex=plainTxt(q.explain); if(ex.length>220) ex=ex.slice(0,ex.lastIndexOf(' ',220))+'.';
+  const foreign=(q.en&&/^[A-Za-z'’ .,!?-]+$/.test(ans))?'en-GB':(q.sv&&/^[A-Za-zåäöÅÄÖ'’ .,!?-]+$/.test(ans))?'sv-SE':null;
+  speakSeq(ans&&ans.length<=160?(foreign?[['Oikea vastaus on','fi-FI'],[ans,foreign],[ex,'fi-FI']]:[['Oikea vastaus on '+ans+'.','fi-FI'],[ex,'fi-FI']]):[[ex,'fi-FI']]); }
+function speakQ(){ const q=R&&R.q; if(!q) return;
+  if(q.speakTxt){ speakSeq([[q.speakTxt,'fi-FI']]); return; }
+  if(q.say && q.sayLang){ const pr=plainTxt(String(q.prompt).replace(/<b>[\s\S]*?<\/b>/g,'')); speakSeq([[pr,'fi-FI'],[q.say,q.sayLang]]); return; }
+  if(q.say){ let pr=plainTxt(String(q.prompt).replace(/<b>[\s\S]*?<\/b>/g,'')).replace(/\s+\./g,'.'); pr=/^Kuuntele sana( tarkasti)?\.?/.test(pr)?pr.replace(/^Kuuntele sana( tarkasti)?\.?/,(m,x)=>`Kuuntele sana${x||''}: ${q.say}.`):pr+' '+q.say+'.'; speakSeq([[pr,'fi-FI']]); return; }
+  if(q.sv) speak(q.sv,'sv-SE'); else if(q.en) speak(q.en,'en-GB');
+  else { const pr=plainTxt(q.prompt), sep=/[?!.]$/.test(pr)?' ':'. '; speakSeq([[pr+(q.type==='mc'&&q.options.length<=4&&q.options.every(o=>String(o).length<40)?sep+'Vaihtoehdot: '+q.options.map(o=>SAYSYM[o]||o).join(', '):''),'fi-FI']]); } }
+/* kuvat: kymppiruudukko ja kuviot */
+const DOTC=['#E4572E','#2F6DB5','#3C8A4E','#F2B134'];
+function tenFrame(n, n2, col){ col=col||'#E4572E'; const rows=Math.max(1,Math.ceil((n+(n2||0))/10)); let s='';
+  for(let r=0;r<rows;r++) for(let c=0;c<10;c++){ const i=r*10+c, x=14+c*30+(c>=5?8:0), y=14+r*34;
+    s+=`<rect x="${x-13}" y="${y-13}" width="26" height="26" rx="5" fill="#FFFFFF" stroke="#C9D3DE" stroke-width="2"/>`;
+    if(i<n) s+=`<circle cx="${x}" cy="${y}" r="10" fill="${col}"/>`; else if(i<n+(n2||0)) s+=`<circle cx="${x}" cy="${y}" r="10" fill="#2F6DB5"/>`; }
+  return `<svg viewBox="0 0 316 ${rows*34+6}" style="width:100%; max-width:340px" role="img" aria-label="${n+(n2||0)} palloa">${s}</svg>`; }
+function scatter(n, shape){ let s='', pts=[]; const rnd=(a,b)=>a+Math.random()*(b-a);
+  for(let k=0;k<n;k++){ let x,y,t=0; do{ x=rnd(24,296); y=rnd(22,118); t++; }while(t<60 && pts.some(p=>Math.hypot(p[0]-x,p[1]-y)<34)); pts.push([x,y]);
+    s+=shape==='star'?`<path transform="translate(${x.toFixed(0)} ${y.toFixed(0)}) scale(1.4)" d="M0 -10 L3 -3 L10 -3 L4.5 1.5 L6.5 9 L0 4.5 L-6.5 9 L-4.5 1.5 L-10 -3 L-3 -3 Z" fill="#F2B134" stroke="#C98A00" stroke-width="1"/>`
+      :`<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="13" fill="${DOTC[k%4]}"/>`; }
+  return `<svg viewBox="0 0 320 140" style="width:100%; max-width:340px; background:#FFFFFF; border-radius:14px" role="img" aria-label="${n} esinettä">${s}</svg>`; }
+function numOpts(ans, lo, hi, k){ const set=new Set([ans]); const near=[ans+1,ans-1,ans+2,ans-2,ans+10,ans-10,ans+3]; for(const x of shuffle(near)){ if(set.size>=(k||4)) break; if(x>=lo&&x<=hi) set.add(x); }
+  while(set.size<(k||4)){ const x=ri(lo,hi); set.add(x); } return shuffle([...set]).map(String); }
+const nQ=(prompt, ans, lo, hi, explain, extra)=>Object.assign({type:'mc', prompt, options:numOpts(ans,lo,hi), answer:String(ans), explain:explain||''}, extra||{});
+const thing=()=>pick(tv({horse:[['porkkana','porkkanaa'],['omena','omenaa']],dog:[['herkku','herkkua'],['lelu','lelua']],hockey:[['kiekko','kiekkoa'],['maila','mailaa']],football:[['pallo','palloa'],['tötsä','tötsää']],floorball:[['pallo','palloa'],['maila','mailaa']]}));
+const cnt=(n,w)=>`${n} ${n===1?w[0]:w[1]}`;
+/* --- luvut 0–20 --- */
+function genLuku1(lvl){ const max=lvl===1?10:20; const type=pick(lvl===1?['count','count','cmp','seq','split','next']:lvl===2?['count','cmp','sym','seq','split','next','tens']:['sym','seq','seqd','split','tens','next','cmp']);
+  if(type==='count'){ const n=ri(lvl===1?2:6, max); const vis=n>10||Math.random()<.5?tenFrame(n):scatter(n, Math.random()<.5?'star':'dot');
+    return nQ('Montako kuvassa on? Laske.', n, 0, 20, n>10?`Täysi rivi on 10. Lisäksi ${n-10}. Yhteensä ${n}.`:`Kun lasket yksi kerrallaan, saat ${n}.`, {visual:vis}); }
+  if(type==='cmp'){ let a=ri(0,max), b=ri(0,max); while(b===a) b=ri(0,max); const big=Math.random()<.5;
+    return {type:'mc', prompt:`Kumpi luku on ${big?'suurempi':'pienempi'}: <b>${a}</b> vai <b>${b}</b>?`, options:[String(a),String(b)], answer:String(big?Math.max(a,b):Math.min(a,b)), explain:`Lukujonossa ${Math.min(a,b)} tulee ennen lukua ${Math.max(a,b)}, joten ${Math.max(a,b)} on suurempi.`}; }
+  if(type==='sym'){ const a=ri(0,max), b=Math.random()<.2?a:ri(0,max); const s=a<b?'<':a>b?'>':'=';
+    return {type:'mc', prompt:`Valitse oikea merkki: <b>${a} ☐ ${b}</b>`, options:['<','>','='], answer:s, explain:a===b?'Luvut ovat yhtä suuret, joten merkki on =.':`Merkin kärki osoittaa pienempään lukuun: ${a} ${s} ${b}.`}; }
+  if(type==='seq'||type==='seqd'){ const down=type==='seqd', st=down?ri(4,max):ri(0,max-4), seq=[0,1,2,3,4].map(i=>down?st-i:st+i), gap=ri(1,3);
+    return nQ(`Mikä luku puuttuu? <b>${seq.map((x,i)=>i===gap?'☐':x).join(', ')}</b>`, seq[gap], 0, 20, `Lukujono ${down?'pienenee':'kasvaa'} yhdellä: ${seq.join(', ')}.`); }
+  if(type==='next'){ const n=ri(1,max-1), before=Math.random()<.5;
+    return nQ(`Mikä luku tulee ${before?'juuri ennen lukua':'heti luvun'} <b>${n}</b>${before?'':' jälkeen'}?`, before?n-1:n+1, 0, 20, before?`Ennen lukua ${n} tulee ${n-1}.`:`Luvun ${n} jälkeen tulee ${n+1}.`); }
+  if(type==='split'){ const n=ri(lvl===1?3:5, lvl===1?10:lvl===2?10:20), a=ri(1,n-1);
+    return nQ(`Luku <b>${n}</b> on <b>${a}</b> ja ☐. Mikä luku puuttuu?`, n-a, 0, 20, `${a} + ${n-a} = ${n}.`, {visual:tenFrame(a, n-a)}); }
+  const n=ri(11,19); return nQ(`Luvussa <b>${n}</b> on 1 kymppi ja montako ykköstä?`, n-10, 0, 10, `${n} = 10 + ${n-10}.`, {visual:tenFrame(n)}); }
+/* --- yhteen- ja vähennyslasku 0–20, ei koskaan alle nollan --- */
+function pair1(lvl, plus){ for(let k=0;k<200;k++){ let a,b;
+    if(lvl===1){ a=ri(0,10); b=plus?ri(0,10-a):ri(0,a); return [a,b]; }
+    if(lvl===2){ if(plus){ a=ri(10,18); b=ri(1,19-a); if(a%10+b<10) return [a,b]; } else { a=ri(11,19); b=ri(1,a%10); return [a,b]; } }
+    else { if(plus){ a=ri(4,9); b=ri(10-a+1,9); if(a+b<=18) return [a,b]; } else { a=ri(11,18); b=ri(a%10+1,9); if(a-b>=0) return [a,b]; } } }
+  return plus?[3,4]:[7,2]; }
+function genYv1(lvl){ const type=pick(lvl===1?['calc','calc','pic','miss','story']:['calc','calc','miss','story','pic']); const plus=Math.random()<.55; const [a,b]=pair1(lvl,plus), c=plus?a+b:a-b;
+  const ex=plus?(lvl===3?`Täydennä ensin kymppiin: ${a} + ${10-a} = 10, ja lisää loput ${b-(10-a)}: ${c}.`:`${a} + ${b} = ${c}.`)
+               :(lvl===3?`Vähennä ensin kymppiin: ${a} − ${a-10} = 10, ja sitten loput ${b-(a-10)}: ${c}.`:`${a} − ${b} = ${c}.`);
+  if(type==='pic' && c<=20 && (plus?a+b:a)<=20) return nQ(`Laske kuvan avulla: <b>${a} ${plus?'+':'−'} ${b}</b>`, c, 0, 20, ex, {visual:plus?tenFrame(a,b):tenFrame(c,0)+`<p class="small muted center" style="margin-top:6px">${a} palloa, joista ${b} vietiin pois.</p>`});
+  if(type==='miss') return plus?nQ(`Mikä luku puuttuu? <b>${a} + ☐ = ${c}</b>`, b, 0, 20, `${a} + ${b} = ${c}.`):nQ(`Mikä luku puuttuu? <b>${a} − ☐ = ${c}</b>`, b, 0, 20, `${a} − ${b} = ${c}.`);
+  if(type==='story' && a>0 && b>0){ const w=thing(); const t=plus?pick([`{pet} sai ${cnt(a,w)}. Sitten se sai vielä ${b} lisää. Montako sillä on nyt?`,`Laatikossa on ${cnt(a,w)}. Sinne laitetaan vielä ${b} lisää. Montako laatikossa on nyt?`])
+      :pick([`{pet} sai ${cnt(a,w)}. Niistä ${b} katosi. Montako jäi jäljelle?`,`Laatikossa oli ${cnt(a,w)}. Niistä otettiin pois ${b}. Montako jäi laatikkoon?`]);
+    return nQ(fill(t), c, 0, 20, ex); }
+  if(lvl===3 && Math.random()<.35) return {type:'input', im:'numeric', prompt:`Laske <b>${a} ${plus?'+':'−'} ${b}</b>`, answer:String(c), ph:'vastaus', check:checkNum(c), explain:ex};
+  return nQ(`Laske <b>${a} ${plus?'+':'−'} ${b}</b>`, c, 0, 20, ex); }
+/* --- muodot ja kuviot --- */
+const SHAPES={ympyrä:'<circle cx="60" cy="60" r="44"/>', kolmio:'<path d="M60 14 L106 104 L14 104 Z"/>', neliö:'<rect x="18" y="18" width="84" height="84"/>', suorakulmio:'<rect x="6" y="32" width="108" height="56"/>'};
+const shapeSVG=(k,col,sz)=>`<svg viewBox="0 0 120 120" width="${sz||110}" height="${sz||110}" style="vertical-align:middle"><g fill="${col||'#2F6DB5'}" stroke="#1B2A3D" stroke-width="3">${SHAPES[k]}</g></svg>`;
+function genMuoto1(lvl){ const names=Object.keys(SHAPES), type=pick(lvl===1?['name','name','pattern']:['name','pattern','corners','pattern']);
+  if(type==='name'){ const k=pick(names); return {type:'mc', prompt:'Mikä muoto tämä on?', visual:shapeSVG(k, pick(DOTC)), options:shuffle(names), answer:k, explain:{ympyrä:'Ympyrä on pyöreä, eikä sillä ole kulmia.',kolmio:'Kolmiolla on kolme sivua ja kolme kulmaa.',neliö:'Neliön kaikki neljä sivua ovat yhtä pitkiä.',suorakulmio:'Suorakulmiolla on neljä kulmaa, ja vastakkaiset sivut ovat yhtä pitkiä.'}[k]}; }
+  if(type==='corners'){ const k=pick(['kolmio','neliö','suorakulmio','ympyrä']), n={kolmio:3,neliö:4,suorakulmio:4,ympyrä:0}[k];
+    return {type:'mc', prompt:`Montako kulmaa on muodolla <b>${k}</b>?`, visual:shapeSVG(k,'#F2B134'), options:['0','3','4','5'], answer:String(n), explain:n?`${{kolmio:'Kolmiolla',neliö:'Neliöllä',suorakulmio:'Suorakulmiolla'}[k]} on ${n} kulmaa.`:'Ympyrällä ei ole kulmia.'}; }
+  const [A,B,C]=sample(names,3), pat=lvl===1?[A,B,A,B,A,B]:pick([[A,B,B,A,B,B],[A,B,C,A,B,C],[A,A,B,A,A,B]]); const cols={}; [A,B,C].forEach((k,i)=>cols[k]=DOTC[i]); const gap=5;
+  return {type:'mc', prompt:'Mikä muoto tulee tyhjään kohtaan? Katso, miten kuvio toistuu.', visual:`<div style="display:flex; flex-wrap:wrap; gap:4px; justify-content:center">${pat.map((k,i)=>i===gap?'<svg viewBox="0 0 120 120" width="52" height="52"><rect x="10" y="10" width="100" height="100" rx="14" fill="none" stroke="#9AA7B6" stroke-width="5" stroke-dasharray="12 8"/></svg>':shapeSVG(k,cols[k],52)).join('')}</div>`,
+    options:shuffle([...new Set([pat[gap],A,B,C,...names])].slice(0,4)), answer:pat[gap], explain:`Kuvio toistuu: ${pat.slice(0,3).join(', ')}… Tyhjään kohtaan tulee ${pat[gap]}.`}; }
+Object.assign(GEN,{luku1:genLuku1, yv1:genYv1, muoto1:genMuoto1});
+Object.entries({luku1:'Luvut 0–20', yv1:'Yhteen- ja vähennyslasku', muoto1:'Muodot ja kuviot'}).forEach(([k,n])=>{ TOPIC[k]={name:n}; });
+SUBJ[1]=[{id:'ma',name:'Matematiikka',areas:['luku1','yv1','muoto1']}];
+SUBJ[1].flatMap(x=>x.areas).forEach(t=>{ if(!ALLT.includes(t)) ALLT.push(t); S.levels[t]=S.levels[t]||1; S.hist[t]=S.hist[t]||[]; });
+
+/* ================= v30: 2. luokka – matematiikka ================= */
+/* kympit ja ykköset kuvana: kymppisauvat + ykköskuutiot */
+function tensOnes(n){ const t=Math.floor(n/10), o=n%10; let s='';
+  for(let i=0;i<t;i++){ const x=8+i*22; s+=`<rect x="${x}" y="8" width="16" height="100" rx="3" fill="#2F6DB5" stroke="#1B3E6E" stroke-width="2"/>`; for(let k=1;k<10;k++) s+=`<line x1="${x}" y1="${8+k*10}" x2="${x+16}" y2="${8+k*10}" stroke="#1B3E6E" stroke-width="1"/>`; }
+  for(let i=0;i<o;i++){ const x=8+t*22+10+(i%3)*18, y=58+Math.floor(i/3)*17; s+=`<rect x="${x}" y="${y}" width="14" height="14" rx="2" fill="#E4572E" stroke="#8E2B12" stroke-width="1.5"/>`; }
+  const w=Math.max(120, 8+t*22+10+3*18+8); return `<svg viewBox="0 0 ${w} 116" style="width:100%; max-width:${Math.min(340,w*1.6)}px" role="img" aria-label="${t} kymppiä ja ${o} ykköstä">${s}</svg>`; }
+const nQ2=(prompt, ans, explain, extra)=>nQ(prompt, ans, Math.max(0,ans-25), Math.max(ans,Math.min(100,ans+25)), explain, extra);
+function genLuku2(lvl){ const type=pick(lvl===1?['place','pic','cmp','next','seq']:lvl===2?['place','pic','sym','seq','seq5','even','next']:['sym','seq5','seqd','even','place','build','cmp']);
+  const n=ri(lvl===1?11:20, 99);
+  if(type==='pic') return nQ2('Mikä luku kuvassa on? Sininen sauva on kymppi ja punainen kuutio on ykkönen.', n, `${Math.floor(n/10)} kymppiä ja ${n%10} ykköstä on ${n}.`, {visual:tensOnes(n)});
+  if(type==='place'){ const tens=Math.random()<.5; return nQ(`Montako ${tens?'kymppiä':'ykköstä'} on luvussa <b>${n}</b>?`, tens?Math.floor(n/10):n%10, 0, 9, `${n} = ${Math.floor(n/10)} kymppiä ja ${n%10} ykköstä.`); }
+  if(type==='build'){ const t=ri(1,9), o=ri(0,9); return nQ2(`Mikä luku on <b>${t} kymppiä ja ${o} ykköstä</b>?`, t*10+o, `${t} · 10 + ${o} = ${t*10+o}.`); }
+  if(type==='cmp'){ let a=ri(10,99), b=ri(10,99); while(b===a) b=ri(10,99); const big=Math.random()<.5;
+    return {type:'mc', prompt:`Kumpi luku on ${big?'suurempi':'pienempi'}: <b>${a}</b> vai <b>${b}</b>?`, options:[String(a),String(b)], answer:String(big?Math.max(a,b):Math.min(a,b)), explain:`Vertaa ensin kymppejä, sitten ykkösiä. ${Math.max(a,b)} on suurempi kuin ${Math.min(a,b)}.`}; }
+  if(type==='sym'){ const a=ri(10,99), b=Math.random()<.2?a:Math.random()<.5?Math.floor(a/10)*10+ri(0,9):ri(10,99); const s=a<b?'<':a>b?'>':'=';
+    return {type:'mc', prompt:`Valitse oikea merkki: <b>${a} ☐ ${b}</b>`, options:['<','>','='], answer:s, explain:a===b?'Luvut ovat yhtä suuret.':`Merkin kärki osoittaa pienempään lukuun: ${a} ${s} ${b}.`}; }
+  if(type==='next'){ const before=Math.random()<.5, m=ri(11,98); return nQ2(`Mikä luku tulee ${before?'juuri ennen lukua':'heti luvun'} <b>${m}</b>${before?'':' jälkeen'}?`, before?m-1:m+1, before?`Ennen lukua ${m} tulee ${m-1}.`:`Luvun ${m} jälkeen tulee ${m+1}.`); }
+  if(type==='seq'||type==='seq5'||type==='seqd'){ const step=type==='seq'?pick([1,2,10]):type==='seq5'?pick([2,5,10]):pick([1,2,10]), down=type==='seqd';
+    const st=down?ri(4*step+5,99):ri(0,99-4*step), seq=[0,1,2,3,4].map(i=>down?st-i*step:st+i*step), gap=ri(1,3);
+    return nQ2(`Mikä luku puuttuu? <b>${seq.map((x,i)=>i===gap?'☐':x).join(', ')}</b>`, seq[gap], `Lukujono ${down?'pienenee':'kasvaa'} aina ${step}: ${seq.join(', ')}.`); }
+  const m=ri(2,60), even=m%2===0; return {type:'mc', prompt:`Onko luku <b>${m}</b> parillinen vai pariton?`, options:['parillinen','pariton'], answer:even?'parillinen':'pariton', explain:`Katso ykkösiä: ${m%10}. Parilliset luvut päättyvät numeroon 0, 2, 4, 6 tai 8.`}; }
+/* yhteen- ja vähennyslasku 0–100, ei koskaan alle nollan */
+function pair2(lvl, plus){ for(let k=0;k<300;k++){ let a,b;
+    if(lvl===1){ if(Math.random()<.5){ a=ri(1,8)*10; b=plus?ri(1,9-a/10)*10:ri(1,a/10)*10; } else { a=ri(2,9)*10+ri(0,6); b=plus?ri(1,9-a%10):ri(1,Math.max(1,a%10)); } if(plus?a+b<=99:b<=a&&(a%10>=b%10||b%10===0)) return [a,b]; }
+    else if(lvl===2){ a=ri(21,89); b=ri(11,plus?98-a:a-10); if(b<10) continue; if(plus?(a%10+b%10<10&&a+b<=99):(a%10>=b%10&&b<=a)) return [a,b]; }
+    else { a=ri(21,89); b=plus?ri(11,99-a):ri(11,a-1); if(plus?(a%10+b%10>=10&&a+b<=100):(a%10<b%10&&b<a)) return [a,b]; } }
+  return plus?[32,15]:[47,23]; }
+function genYv2(lvl){ const type=pick(['calc','calc','miss','story', lvl===3?'calc':'pic']); const plus=Math.random()<.55; const [a,b]=pair2(lvl,plus), c=plus?a+b:a-b;
+  const bt=b-b%10, bo=b%10; const ex=plus?`${a} + ${bt}${bo?` + ${bo}`:''}: ensin kympit ${a} + ${bt} = ${a+bt}${bo?`, sitten ykköset ${a+bt} + ${bo} = ${c}`:''}.`
+    :`${a} − ${bt}${bo?` − ${bo}`:''}: ensin kympit ${a} − ${bt} = ${a-bt}${bo?`, sitten ykköset ${a-bt} − ${bo} = ${c}`:''}.`;
+  if(type==='pic' && plus) return nQ2(`Laske kuvan avulla: <b>${a} + ${b}</b>`, c, ex, {visual:tensOnes(a)+'<p class="small muted center">ja lisäksi</p>'+tensOnes(b)});
+  if(type==='miss') return plus?nQ2(`Mikä luku puuttuu? <b>${a} + ☐ = ${c}</b>`, b, `${c} − ${a} = ${b}.`):nQ2(`Mikä luku puuttuu? <b>${a} − ☐ = ${c}</b>`, b, `${a} − ${c} = ${b}.`);
+  if(type==='story'){ const w=thing(); const t=plus?pick([`Varastossa on ${cnt(a,w)}. Sinne tuodaan vielä ${b} lisää. Montako varastossa on nyt?`,`{pet} keräsi aamulla ${cnt(a,w)} ja illalla ${b} lisää. Montako yhteensä?`])
+      :pick([`Varastossa oli ${cnt(a,w)}. Niistä käytettiin ${b}. Montako jäi jäljelle?`,`{pet} sai ${cnt(a,w)}. Se antoi kavereilleen ${b}. Montako sille jäi?`]);
+    return nQ2(fill(t), c, ex); }
+  if(lvl>=2 && Math.random()<.35) return {type:'input', im:'numeric', prompt:`Laske <b>${a} ${plus?'+':'−'} ${b}</b>`, answer:String(c), ph:'vastaus', check:checkNum(c), explain:ex};
+  return nQ2(`Laske <b>${a} ${plus?'+':'−'} ${b}</b>`, c, ex); }
+/* kertolaskun alku: ryhmät, toistuva yhteenlasku, kertotaulut 2, 5, 10 (taso 3: myös 3 ja 4) */
+function groupsSVG(g, k){ let s=''; const cols=Math.min(g,5), w=60; for(let i=0;i<g;i++){ const cx=8+(i%cols)*w, cy=8+Math.floor(i/cols)*62;
+    s+=`<rect x="${cx}" y="${cy}" width="54" height="54" rx="12" fill="#FFFFFF" stroke="#9AA7B6" stroke-width="2"/>`;
+    for(let j=0;j<k;j++){ const x=cx+10+(j%3)*17, y=cy+10+Math.floor(j/3)*12; s+=`<circle cx="${x}" cy="${y}" r="5.5" fill="${DOTC[i%4]}"/>`; } }
+  return `<svg viewBox="0 0 ${8+cols*w} ${8+Math.ceil(g/cols)*62}" style="width:100%; max-width:340px" role="img" aria-label="${g} ryhmää, joissa kussakin ${k}">${s}</svg>`; }
+function genKerto2(lvl){ const tabs=lvl===3?[2,3,4,5,10]:[2,5,10], k=pick(tabs), g=ri(1,lvl===1?5:10), c=g*k; const type=pick(['groups','rep','calc','calc','story']);
+  if(type==='groups' && k<=10 && g<=10 && k<=9) return nQ(`Montako palloa on yhteensä? Kuvassa on ${g} ryhmää ja jokaisessa ${k} palloa.`, c, 0, 100, `${g} · ${k} = ${c}.`, {visual:groupsSVG(g,k)});
+  if(type==='rep' && g>=2 && g<=6) return nQ(`Laske <b>${Array(g).fill(k).join(' + ')}</b>. Kertolaskuna se on ${g} · ${k}.`, c, 0, 100, `Luku ${k} lasketaan yhteen ${g} kertaa: ${g} · ${k} = ${c}.`);
+  if(type==='story'){ const t=pick([`{pet} saa joka päivä ${k} ${thing()[1]}. Montako se saa ${g} päivässä?`,`Laatikoissa on ${k} ${thing()[1]} kussakin. Laatikoita on ${g}. Montako yhteensä?`]); return nQ(fill(t), c, 0, 100, `${g} · ${k} = ${c}.`); }
+  return nQ(`Laske <b>${g} · ${k}</b>`, c, 0, 100, `${k}:n kertotaulu: ${Array.from({length:g},(_,i)=>(i+1)*k).join(', ')}.`); }
+/* kello: tasan ja puoli (taso 3: myös vartit) */
+function genKello2(lvl){ const mins=lvl===3?[0,15,30,45]:[0,30], h=ri(1,12), m=lvl===1?pick([0,0,30]):pick(mins); const type=pick(['read','read','dig','later']);
+  const ex=`Lyhyt viisari näyttää tunnit ja pitkä minuutit. Kello on ${phrase(h,m)} eli ${h}.${pad(m)}.`;
+  const opts=()=>{ const set=new Set([phrase(h,m)]); [phrase(h%12+1,m),phrase(h,(m+30)%60),phrase((h+10)%12+1,m),phrase(m===0?6:m===30?6:h,0)].forEach(x=>{ if(set.size<4) set.add(x); }); while(set.size<4) set.add(phrase(ri(1,12),pick(mins))); return shuffle([...set]); };
+  if(type==='read') return {type:'mc', prompt:'Mitä kello on?', visual:clockSVG(h,m), options:opts(), answer:phrase(h,m), explain:ex};
+  if(type==='dig'){ const set=new Set([`${h}.${pad(m)}`]); [`${h%12+1}.${pad(m)}`,`${h}.${pad((m+30)%60)}`,`${(h+10)%12+1}.${pad(m)}`].forEach(x=>set.add(x)); while(set.size<4) set.add(`${ri(1,12)}.${pad(pick(mins))}`);
+    return {type:'mc', prompt:'Mikä digikellon aika vastaa kuvan kelloa?', visual:clockSVG(h,m), options:shuffle([...set].slice(0,4)), answer:`${h}.${pad(m)}`, explain:ex}; }
+  const d=pick(lvl===1?[1,2]:[1,2,3]), h2=(h+d-1)%12+1; return {type:'mc', prompt:`Kello on nyt ${phrase(h,m)}. Mitä kello on <b>${d===1?'tunnin':d+' tunnin'}</b> päästä?`, visual:clockSVG(h,m),
+    options:shuffle([...new Set([phrase(h2,m),phrase(h2%12+1,m),phrase(h,m),phrase((h+10)%12+1,m)])]).slice(0,4).concat([]), answer:phrase(h2,m), explain:`Lyhyt viisari siirtyy ${d} numeroa eteenpäin: ${phrase(h2,m)}.`}; }
+/* raha: kolikot ja setelit, euroja (taso 3: vaihtoraha) */
+const MONEY=[[1,'coin'],[2,'coin'],[5,'note'],[10,'note'],[20,'note']];
+function moneySVG(list){ let s='', x=6; list.forEach(v=>{ if(v<5){ s+=`<g transform="translate(${x+22} 34)"><circle r="21" fill="${v===2?'#C9CED6':'#D9A441'}" stroke="#7A6A3A" stroke-width="2"/><circle r="14" fill="${v===2?'#D9A441':'#C9CED6'}"/><text y="6" text-anchor="middle" font-family="Nunito, sans-serif" font-weight="900" font-size="15" fill="#2B2B2B">${v} €</text></g>`; x+=48; }
+    else { const col={5:'#B8B3A7',10:'#E28C8C',20:'#7FA7D9'}[v]; s+=`<g transform="translate(${x} 8)"><rect width="74" height="52" rx="6" fill="${col}" stroke="#55606E" stroke-width="2"/><text x="37" y="34" text-anchor="middle" font-family="Nunito, sans-serif" font-weight="900" font-size="19" fill="#1B2A3D">${v} €</text></g>`; x+=80; } });
+  return `<svg viewBox="0 0 ${x+4} 70" style="width:100%; max-width:${Math.min(360,(x+4)*1.2)}px" role="img" aria-label="Rahaa">${s}</svg>`; }
+function genRaha2(lvl){ const type=pick(lvl===3?['sum','change','change','pay']:lvl===2?['sum','sum','pay']:['sum','sum','pay']);
+  if(type==='sum'||type==='pay'){ const pool=lvl===1?[1,2,1,2,5]:[1,2,5,10,10,20], n=ri(2,lvl===1?4:5); let list=[]; for(let i=0;i<n;i++) list.push(pick(pool)); list.sort((a,b)=>b-a); const sum=list.reduce((a,b)=>a+b,0);
+    if(type==='pay'){ const price=ri(2,lvl===1?9:40), enough=sum>=price; return {type:'mc', prompt:`Lelu maksaa <b>${price} €</b>. Riittävätkö kuvan rahat?`, visual:moneySVG(list), options:['riittävät','eivät riitä'], answer:enough?'riittävät':'eivät riitä', explain:`Rahaa on yhteensä ${sum} €. ${enough?`Se on vähintään ${price} €.`:`Siitä puuttuu ${price-sum} €.`}`}; }
+    return nQ('Paljonko rahaa kuvassa on yhteensä?', sum, Math.max(1,sum-15), sum+15, `${list.join(' € + ')} € = ${sum} €.`, {visual:moneySVG(list), options:numOpts(sum, Math.max(1,sum-15), sum+15).map(x=>x+' €'), answer:sum+' €'}); }
+  const price=ri(3,18), paid=price<=10?10:20; return nQ(`{pet} ostaa jotain ${price} eurolla ja maksaa ${paid} euron setelillä. Paljonko se saa takaisin?`.replace('{pet}',esc(S.profile.pet)), paid-price, 0, 20, `${paid} € − ${price} € = ${paid-price} €.`, {visual:moneySVG([paid]), options:numOpts(paid-price,0,20).map(x=>x+' €'), answer:(paid-price)+' €'}); }
+Object.assign(GEN,{luku2:genLuku2, yv2:genYv2, kerto2:genKerto2, kello2:genKello2, raha2:genRaha2});
+Object.entries({luku2:'Luvut 0–100', yv2:'Yhteen- ja vähennyslasku', kerto2:'Kertolaskun alku', kello2:'Kello', raha2:'Raha'}).forEach(([k,n])=>{ TOPIC[k]={name:n}; });
+SUBJ[2]=[{id:'ma',name:'Matematiikka',areas:['luku2','yv2','kerto2','kello2','raha2','muoto1']}];
+SUBJ[2].flatMap(x=>x.areas).forEach(t=>{ if(!ALLT.includes(t)) ALLT.push(t); S.levels[t]=S.levels[t]||1; S.hist[t]=S.hist[t]||[]; });
+GRADE_DESC[2]='Luvut 0–100, laskut kymppiylityksin, kertolaskun alku, kello ja raha (lisää aineita tulossa)';
+
+/* ================= v31: 1.–2. luokka – äidinkieli ================= */
+/* Sanalista tavuineen (tavuraja = '-'). Yksitavuiset ilman viivaa. */
+const W12=('puu suu kuu maa jää yö tie sää '+
+ 'ka-la ta-lo pal-lo kis-sa koi-ra hii-ri au-to lu-mi ve-si ko-ti ki-vi me-ri jo-ki sa-de ke-sä tal-vi syk-sy ke-vät äi-ti i-sä ve-li sis-ko mum-mo vaa-ri '+
+ 'kuk-ka leh-ti met-sä kou-lu kir-ja ky-nä rep-pu pi-po tak-ki ken-kä hat-tu lin-tu ka-na leh-mä pos-su ank-ka ka-ni pyö-rä tuo-li pöy-tä sän-ky ty-ny sa-tu kel-lo '+
+ 'he-vo-nen o-me-na ba-naa-ni pork-ka-na pe-ru-na mus-tik-ka man-sik-ka jää-te-lö ik-ku-na ka-me-li a-na-nas pin-gvii-ni '+
+ 'kro-ko-tii-li ap-pel-sii-ni').split(' ').filter(w=>w).map(w=>({w:w.replace(/-/g,''), t:w.split('-')}));
+const ABC12='abcdefghijklmnopqrstuvwxyzåäö', VOW12='aeiouyäö';
+const up=s=>s.toUpperCase();
+const letterOpts=(c)=>{ const near={a:'oeä',o:'aöu',e:'äai',i:'eyj',u:'oyv',y:'uiä',ä:'aeö',ö:'oäy',k:'gth',t:'dkp',p:'btk',s:'zrh',l:'rin',r:'lsn',m:'nvw',n:'mrl',h:'kjs',j:'ihy',v:'wfu',d:'tbp',b:'pdv',g:'kqh'}[c]||'aeiklmnoprst';
+  const set=new Set([c]); for(const x of shuffle(near.split(''))){ if(set.size>=4) break; set.add(x); } while(set.size<4) set.add(pick('aeiklmnoprstuvhjy'.split(''))); return shuffle([...set]); };
+/* 1. lk: kirjaimet ja äänteet */
+function genKirj1(lvl){ const type=pick(lvl===1?['miss1','miss1','case']:lvl===2?['miss1','missmid','case','next','vow']:['missmid','last','next','vow','abcword']);
+  const it=pick(W12.filter(x=>x.w.length<=(lvl===1?5:8))), w=it.w;
+  if(type==='miss1'){ const c=w[0]; return {type:'mc', prompt:`Kuuntele sana. Mikä kirjain puuttuu alusta? <b>_${up(w.slice(1))}</b>`, say:w, options:letterOpts(c).map(up), answer:up(c), explain:`Sana on ${w}. Se alkaa äänteellä ${c}.`}; }
+  if(type==='missmid'){ const i=ri(1,w.length-2), c=w[i]; return {type:'mc', prompt:`Kuuntele sana. Mikä kirjain puuttuu? <b>${up(w.slice(0,i))}_${up(w.slice(i+1))}</b>`, say:w, options:letterOpts(c).map(up), answer:up(c), explain:`Sana on ${w}. Puuttuva kirjain on ${c}.`}; }
+  if(type==='last'){ const c=w[w.length-1]; return {type:'mc', prompt:`Kuuntele sana <b>${up(w)}</b>. Mihin kirjaimeen se loppuu?`, say:w, options:letterOpts(c).map(up), answer:up(c), explain:`${w} loppuu kirjaimeen ${c}.`}; }
+  if(type==='case'){ const c=pick('abdeghijklmnoprstuvyäö'.split('')), bigToSmall=Math.random()<.5; const opts=letterOpts(c);
+    return {type:'mc', prompt:bigToSmall?`Mikä on kirjaimen <b>${up(c)}</b> pieni kirjain?`:`Mikä on kirjaimen <b>${c}</b> iso kirjain?`, options:bigToSmall?opts:opts.map(up), answer:bigToSmall?c:up(c), explain:`${up(c)} ja ${c} ovat sama kirjain: iso ja pieni.`}; }
+  if(type==='next'){ const i=ri(0,ABC12.length-2), after=Math.random()<.6||i===0, ans=after?ABC12[i+1]:ABC12[i-1];
+    return {type:'mc', prompt:`Mikä kirjain tulee aakkosissa ${after?'heti kirjaimen':'juuri ennen kirjainta'} <b>${up(ABC12[i])}</b>${after?' jälkeen':''}?`, options:letterOpts(ans).map(up), answer:up(ans), explain:`Aakkosissa: ${up(ABC12.slice(Math.max(0,i-2),i+3).split('').join(', '))}.`}; }
+  if(type==='vow'){ const vow=Math.random()<.5, pool=(vow?VOW12:'bdghjklmnprstv').split(''), other=(vow?'bdghjklmnprstv':VOW12).split(''); const ans=pick(pool), wr=sample(other,3);
+    return {type:'mc', prompt:`Mikä näistä kirjaimista on ${vow?'vokaali':'konsonantti'}?`, options:shuffle([ans,...wr]).map(up), answer:up(ans), explain:'Vokaalit ovat A, E, I, O, U, Y, Ä ja Ö. Muut kirjaimet ovat konsonantteja.'}; }
+  const ws=sample(W12.filter(x=>x.w.length<=6),4).map(x=>x.w); const first=ws.slice().sort((a,b)=>cmpFi(a,b))[0];
+  return {type:'mc', prompt:'Mikä sana on aakkosissa ensimmäisenä?', options:ws, answer:first, explain:`Katso ensimmäistä kirjainta: ${ws.slice().sort(cmpFi).join(', ')}.`}; }
+/* tavut */
+function genTavu1(lvl){ const type=pick(lvl===1?['count','count','miss']:lvl===2?['count','miss','join']:['miss','join','count','split']);
+  const pool=W12.filter(x=>lvl===1?x.t.length<=2:true), it=pick(pool.filter(x=>type==='count'||x.t.length>=2)), w=it.w, T=it.t;
+  if(type==='count') return nQ(`Kuuntele sana <b>${up(w)}</b>. Montako tavua siinä on?`, T.length, 1, 4, `${up(T.join('-'))}: ${T.length} tavu${T.length>1?'a':''}. Taputa jokainen tavu.`, {say:w});
+  if(type==='miss'){ const i=ri(0,T.length-1), ans=T[i]; const wr=shuffle(W12.flatMap(x=>x.t).filter(t=>t!==ans && t.length<=ans.length+1 && t.length>=ans.length-1)).slice(0,6);
+    return mcQ(`Kuuntele sana. Mikä tavu puuttuu? <b>${T.map((t,k)=>k===i?'__':up(t)).join(' - ')}</b>`, up(ans), wr.map(up), `Sana on ${up(T.join('-'))}.`, {say:w}); }
+  if(type==='join'){ const wr=[up(T.slice().reverse().join('')), up(T.join('').slice(0,-1)), up(T[0]+T[0])].filter(x=>x!==up(w));
+    return mcQ(`Mikä sana syntyy tavuista <b>${T.map(up).join(' + ')}</b>?`, up(w), wr, `${T.map(up).join(' + ')} = ${up(w)}.`); }
+  const wrongs=[T.join('-').replace(/-/g,'')].concat([1,2].map(()=>{ const s=w.split(''); const cut=ri(1,w.length-1); return s.slice(0,cut).join('')+'-'+s.slice(cut).join(''); })).filter(x=>x!==T.join('-'));
+  return mcQ(`Miten sana <b>${up(w)}</b> jaetaan tavuihin?`, up(T.join('-')), [...new Set(wrongs.map(up))], `Tavussa on aina vokaali. ${up(T.join('-'))}.`); }
+/* lukeminen: lyhyet virkkeet ja kysymykset */
+const NAMES12=['Aino','Leo','Ella','Onni','Helmi','Eino','Sofia','Veeti'];
+const DO12=[['syö',['omenaa','puuroa','porkkanaa','jäätelöä']],['juo',['maitoa','vettä','mehua']],['lukee',['kirjaa','satua','sarjakuvaa']],['piirtää',['kissaa','taloa','aurinkoa']],['rakentaa',['lumiukkoa','majaa','hiekkalinnaa']]];
+const PLACE12=['puistossa','koulussa','kotona','kaupassa','metsässä','rannalla'];
+const SENSE12=[['Lintu ___ taivaalla.','lentää',['ui','sataa','lukee']],['Kala ___ järvessä.','ui',['lentää','haukkuu','piirtää']],['Aurinko ___ taivaalla.','paistaa',['ui','haukkuu','syö']],['Koira ___ pihalla.','haukkuu',['sataa','lentää','paistaa']],['Lunta ___ taivaalta.','sataa',['haukkuu','ui','paistaa']],
+  ['Lehmä ___ ruohoa.','syö',['lentää','sataa','lukee']],['Lapsi ___ kirjaa.','lukee',['sataa','haukkuu','ui']],['Kissa ___ maitoa.','juo',['lentää','sataa','paistaa']],['Hevonen ___ laitumella.','laukkaa',['ui','sataa','lentää']],['Puhelin ___ taskussa.','soi',['ui','haukkuu','syö']]];
+const DAY12=[['On kylmä talvipäivä.','kylmä talvipäivä'],['On lämmin kesäpäivä.','lämmin kesäpäivä'],['On sateinen syyspäivä.','sateinen syyspäivä'],['On aurinkoinen kevätpäivä.','aurinkoinen kevätpäivä']];
+function genLuku12(lvl){ const [A,B]=sample(NAMES12,2), pet=S.profile.pet||'Kaneli', who=pick([A,pet]);
+  if(lvl===1||Math.random()<.3){ if(Math.random()<.5){ const [s,a,w]=pick(SENSE12); return mcQ(`Mikä sana sopii virkkeeseen? <b>${s}</b>`, a, w, `${s.replace('___',a)}`); }
+    const [v,objs]=pick(DO12), o=pick(objs), askWho=Math.random()<.5;
+    return askWho?mcQ(`Lue: <b>${who} ${v} ${o}.</b> Kuka ${v} ${o}?`, who, sample(NAMES12.filter(x=>x!==who),3), `Virkkeessä lukee: ${who} ${v} ${o}.`)
+      :mcQ(`Lue: <b>${who} ${v} ${o}.</b> Mitä ${who} ${v}?`, o, objs.filter(x=>x!==o).concat(DO12.filter(d=>d[0]!==v).flatMap(d=>d[1])).slice(0,5), `Virkkeessä lukee: ${who} ${v} ${o}.`); }
+  if(lvl===2){ const pl=pick(PLACE12), [v,objs]=pick(DO12), o=pick(objs), t=`${A} on ${pl}. Hän ${v} ${o}.`; const q=pick(['where','what']);
+    return q==='where'?mcQ(`Lue: <b>${t}</b> Missä ${A} on?`, pl, PLACE12.filter(x=>x!==pl), `${A} on ${pl}.`):mcQ(`Lue: <b>${t}</b> Mitä ${A} ${v}?`, o, objs.filter(x=>x!==o).concat(['kenkää','tuolia']), `Hän ${v} ${o}.`); }
+  const [d1,dd]=pick(DAY12), [v,objs]=pick(DO12), o=pick(objs), t=`${d1} ${A} ${v} ${o}. ${B} tulee mukaan.`; const q=pick(['day','who2','what']);
+  if(q==='day') return mcQ(`Lue: <b>${t}</b> Millainen päivä on?`, dd, DAY12.map(x=>x[1]).filter(x=>x!==dd), `Ensimmäinen virke kertoo: ${d1}`);
+  if(q==='who2') return mcQ(`Lue: <b>${t}</b> Kuka tulee mukaan?`, B, NAMES12.filter(x=>x!==B&&x!==A).slice(0,3).concat([A]), `${B} tulee mukaan.`);
+  return mcQ(`Lue: <b>${t}</b> Mitä ${A} ${v}?`, o, objs.filter(x=>x!==o).concat(['kenkää']), `${A} ${v} ${o}.`); }
+/* 2. lk: oikeinkirjoitus */
+function lenVariants(w){ const out=new Set(); for(let i=0;i<w.length;i++){ const c=w[i];
+    if(w[i+1]===c) out.add(w.slice(0,i)+w.slice(i+1)); else if(w[i-1]!==c && (i>0 || VOW12.includes(c))) out.add(w.slice(0,i+1)+c+w.slice(i+1)); }
+  out.delete(w); return shuffle([...out]); }
+const END12=[['Mitä kello on','?'],['Varo autoa','!'],['Koira nukkuu','.'],['Missä pallo on','?'],['Apua','!'],['Aurinko paistaa','.'],['Tuletko leikkimään','?'],['Hurraa, voitimme','!'],['Kissa juo maitoa','.'],['Kuka soitti','?'],['Isä laittaa ruokaa','.'],['Onpa kaunis päivä','!']];
+const PROPER12=['Aino','Leo','Helmi','Onni','Suomi','Helsinki','Oulu','Turku','Tampere','Lappi'], COMMON12=['pallo','kissa','talo','koulu','kirja','metsä','lumi','auto','maanantai','tammikuu'];
+function genAi2Kir(lvl){ const type=pick(lvl===1?['len','len','end','cap']:['len','end','cap','capsent', lvl===3?'small':'len']);
+  if(type==='len'){ const it=pick(W12.filter(x=>/(.)\1/.test(x.w)||lvl>1)), w=it.w, wr=lenVariants(w).slice(0,3);
+    if(wr.length<3) return genAi2Kir(lvl); return {type:'mc', prompt:'Kuuntele sana tarkasti. Miten se kirjoitetaan?', say:w, options:shuffle([w,...wr]), answer:w, explain:`${w}: kuuntele, onko äänne pitkä vai lyhyt. Pitkä äänne kirjoitetaan kahdella kirjaimella.`}; }
+  if(type==='end'){ const [s,m]=pick(END12); return {type:'mc', prompt:`Mikä merkki tulee virkkeen loppuun? <b>${s}_</b>`, options:['.','?','!'], answer:m, explain:m==='?'?'Kysymyksen loppuun tulee kysymysmerkki.':m==='!'?'Huudahduksen tai käskyn loppuun tulee huutomerkki.':'Tavallisen virkkeen loppuun tulee piste.'}; }
+  if(type==='cap'){ const ans=pick(PROPER12), wr=sample(COMMON12.filter(x=>!/maanantai|tammikuu/.test(x)),3); return {type:'mc', prompt:'Mikä sana kirjoitetaan aina isolla alkukirjaimella?', options:shuffle([ans,...wr].map(x=>x.toLowerCase())), answer:ans.toLowerCase(), explain:`${ans} on nimi, ja nimet kirjoitetaan isolla alkukirjaimella.`}; }
+  if(type==='small'){ const ans=pick(['maanantai','tammikuu','kesäkuu','perjantai']), wr=sample(PROPER12,3).map(x=>x.toLowerCase()); return {type:'mc', prompt:'Mikä sana kirjoitetaan pienellä alkukirjaimella?', options:shuffle([ans,...wr]), answer:ans, explain:'Viikonpäivät ja kuukaudet kirjoitetaan suomessa pienellä alkukirjaimella.'}; }
+  const n=pick(NAMES12), [v,objs]=pick(DO12), o=pick(objs), good=`${n} ${v} ${o}.`;
+  const wr=[`${n.toLowerCase()} ${v} ${o}.`, `${n} ${v} ${o}`, `${n.toLowerCase()} ${v} ${o}`];
+  return {type:'mc', prompt:'Missä virkkeessä iso alkukirjain ja piste ovat oikein?', options:shuffle([good,...wr]), answer:good, explain:'Virke alkaa isolla kirjaimella ja päättyy pisteeseen. Nimi kirjoitetaan isolla.'}; }
+/* 2. lk: sanat */
+const OPP12=[['iso','pieni'],['pitkä','lyhyt'],['kuuma','kylmä'],['nopea','hidas'],['ylös','alas'],['auki','kiinni'],['märkä','kuiva'],['uusi','vanha'],['iloinen','surullinen'],['raskas','kevyt'],['paksu','ohut'],['korkea','matala'],['valoisa','pimeä'],['täysi','tyhjä'],['kova','pehmeä'],['päivä','yö'],['sisällä','ulkona'],['edessä','takana']];
+const CMP12=[['koulu','reppu'],['lumi','ukko'],['auto','talli'],['sade','takki'],['kirja','hylly'],['hammas','harja'],['jalka','pallo'],['koira','puisto'],['omena','puu'],['pyörä','tie'],['lumi','pallo'],['kukka','ruukku'],['uima','halli'],['kala','keitto']];
+const RHY12=[['kuu','puu','suu'],['talo','valo'],['kala','pala'],['kuusi','uusi'],['hiiri','piiri'],['kukka','sukka'],['lumi','kumi']];
+function genAi2Sana(lvl){ const type=pick(lvl===1?['opp','opp','rhyme','cmp']:['opp','cmp','rhyme','cmpsplit','abc']);
+  if(type==='opp'){ const [a,b]=pick(OPP12), flip=Math.random()<.5, q=flip?b:a, ans=flip?a:b; const CLASH={korkea:['lyhyt','pieni'],pitkä:['matala','pieni'],matala:['pitkä','iso'],lyhyt:['korkea','iso'],pimeä:['yö'],valoisa:['päivä'],yö:['pimeä'],päivä:['valoisa'],iso:['matala','lyhyt'],pieni:['korkea','pitkä'],kylmä:['märkä'],kuiva:['kuuma']}; const wr=sample(OPP12.filter(p=>!p.includes(q)).map(p=>pick(p)).filter(x=>!(CLASH[q]||[]).includes(x)),5);
+    return mcQ(`Mikä on sanan <b>${q}</b> vastakohta?`, ans, wr, `${q} – ${ans}: ne tarkoittavat päinvastaista.`); }
+  if(type==='cmp'){ const [a,b]=pick(CMP12), ans=a+b; const wr=[b+a, a+'-'+b, a+' '+b];
+    return {type:'mc', prompt:`Yhdistä sanat yhdyssanaksi: <b>${a} + ${b}</b>`, options:shuffle([ans,...wr]), answer:ans, explain:`Yhdyssana kirjoitetaan yhteen: ${ans}.`}; }
+  if(type==='cmpsplit'){ const [a,b]=pick(CMP12), w=a+b; const wr=[`${w.slice(0,a.length-1)} + ${w.slice(a.length-1)}`, `${w.slice(0,a.length+1)} + ${w.slice(a.length+1)}`, `${b} + ${a}`];
+    return {type:'mc', prompt:`Mistä kahdesta sanasta yhdyssana <b>${w}</b> on tehty?`, options:shuffle([`${a} + ${b}`,...wr]), answer:`${a} + ${b}`, explain:`${w} = ${a} + ${b}.`}; }
+  if(type==='rhyme'){ const g=pick(RHY12), [q,ans]=sample(g,2); const wr=sample(RHY12.filter(x=>x!==g).flat(),5);
+    return mcQ(`Mikä sana rimmaa sanan <b>${q}</b> kanssa?`, ans, wr, `${q} ja ${ans} loppuvat samalla tavalla.`); }
+  const ws=sample(W12.filter(x=>x.w.length<=7),4).map(x=>x.w), first=ws.slice().sort(cmpFi)[0];
+  return {type:'mc', prompt:'Mikä sana on aakkosissa ensimmäisenä?', options:ws, answer:first, explain:`Aakkosjärjestys: ${ws.slice().sort(cmpFi).join(', ')}.`}; }
+Object.assign(GEN,{kirj1:genKirj1, tavu1:genTavu1, ai12_luku:genLuku12, ai2_kir:genAi2Kir, ai2_sana:genAi2Sana});
+Object.entries({kirj1:'Kirjaimet ja äänteet', tavu1:'Tavut', ai12_luku:'Lukeminen', ai2_kir:'Oikeinkirjoitus', ai2_sana:'Sanat'}).forEach(([k,n])=>{ TOPIC[k]={name:n}; });
+SUBJ[1].push({id:'ai',name:'Äidinkieli',areas:['kirj1','tavu1','ai12_luku']});
+SUBJ[2].push({id:'ai',name:'Äidinkieli',areas:['ai2_kir','ai2_sana','tavu1','ai12_luku']});
+[1,2].forEach(g=>SUBJ[g].flatMap(x=>x.areas).forEach(t=>{ if(!ALLT.includes(t)) ALLT.push(t); S.levels[t]=S.levels[t]||1; S.hist[t]=S.hist[t]||[]; }));
+GRADE_DESC[1]='Luvut 0–20, yhteen- ja vähennyslasku, muodot, kirjaimet, tavut ja lukeminen';
+GRADE_DESC[2]='Luvut 0–100, kertolaskun alku, kello, raha, oikeinkirjoitus, sanat ja lukeminen';
+
+/* ================= v32: 1.–2. luokka – englannin kuunteluosio ================= */
+/* [englanti, suomi, kuva (emoji), ryhmä]. Kuvat ovat laitteen omia emojeja. */
+const EN12=[['dog','koira','🐶','a'],['cat','kissa','🐱','a'],['horse','hevonen','🐴','a'],['cow','lehmä','🐮','a'],['pig','possu','🐷','a'],['bird','lintu','🐦','a'],['fish','kala','🐟','a'],['rabbit','kani','🐰','a'],
+ ['mouse','hiiri','🐭','a'],['duck','ankka','🦆','a'],['bear','karhu','🐻','a'],['frog','sammakko','🐸','a'],['sheep','lammas','🐑','a'],['lion','leijona','🦁','a'],
+ ['red','punainen','🔴','c'],['blue','sininen','🔵','c'],['green','vihreä','🟢','c'],['yellow','keltainen','🟡','c'],['black','musta','⚫','c'],['white','valkoinen','⚪','c'],['orange','oranssi','🟠','c'],['purple','violetti','🟣','c'],['brown','ruskea','🟤','c'],
+ ['apple','omena','🍎','f'],['banana','banaani','🍌','f'],['milk','maito','🥛','f'],['bread','leipä','🍞','f'],['cake','kakku','🍰','f'],['ice cream','jäätelö','🍦','f'],['egg','muna','🥚','f'],['carrot','porkkana','🥕','f'],['strawberry','mansikka','🍓','f'],['cheese','juusto','🧀','f'],
+ ['ball','pallo','⚽','t'],['car','auto','🚗','t'],['book','kirja','📖','t'],['house','talo','🏠','t'],['sun','aurinko','☀️','t'],['moon','kuu','🌙','t'],['star','tähti','⭐','t'],['tree','puu','🌳','t'],['flower','kukka','🌸','t'],['bike','polkupyörä','🚲','t'],['shoe','kenkä','👟','t'],['boat','vene','⛵','t'],
+ ['mother','äiti','👩','p'],['father','isä','👨','p'],['baby','vauva','👶','p']];
+const EN12G=[['hello','hei'],['goodbye','näkemiin'],['thank you','kiitos'],['good morning','hyvää huomenta'],['good night','hyvää yötä'],['yes','kyllä'],['no','ei']];
+const EN12N=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve'];
+const en12grp=g=>({a:'eläimet',c:'värit',f:'ruoka',t:'tavarat',p:'perhe'}[g]);
+function genEn12(lvl, g2){ const L=g2?lvl+1:lvl, type=pick(L===1?['pic','pic','pic','num']:L===2?['pic','pic','fi','num','greet']:L===3?['pic','fi','greet','num','read']:['read','read','fi','fiw','greet']);
+  if(type==='num'){ const n=ri(0,g2?12:10), set=new Set([n]); while(set.size<4) set.add(ri(0,g2?12:10)); const opts=shuffle([...set]).map(String);
+    return {type:'mc', prompt:'Kuuntele englanninkielinen luku. Mikä luku se on?', say:EN12N[n], sayLang:'en-GB', options:opts, answer:String(n), explain:`${EN12N[n]} = ${n}`}; }
+  if(type==='greet'){ const [e,f]=pick(EN12G); return mcQ('Kuuntele. Mitä se tarkoittaa suomeksi?', f, EN12G.filter(x=>x[1]!==f).map(x=>x[1]), `${e} = ${f}`, {say:e, sayLang:'en-GB'}); }
+  const it=pick(EN12), same=EN12.filter(x=>x[3]===it[3]&&x!==it), wr=sample(same.length>=3?same:EN12.filter(x=>x!==it),3);
+  if(type==='pic') return {type:'mc', prompt:'Kuuntele englanninkielinen sana. Mikä kuva sopii siihen?', say:it[0], sayLang:'en-GB', options:shuffle([it[2],...wr.map(x=>x[2])]), answer:it[2], explain:`${it[0]} = ${it[1]} ${it[2]}`, big:true, sayAns:it[1]};
+  if(type==='fi') return {type:'mc', prompt:'Kuuntele englanninkielinen sana. Mitä se tarkoittaa suomeksi?', say:it[0], sayLang:'en-GB', options:shuffle([it[1],...wr.map(x=>x[1])]), answer:it[1], explain:`${it[0]} = ${it[1]}`};
+  if(type==='read') return {type:'mc', prompt:`Mikä englanninkielinen sana sopii kuvaan? <span style="font-size:44px; display:block; margin-top:6px">${it[2]}</span>`, options:shuffle([it[0],...wr.map(x=>x[0])]), answer:it[0], explain:`${it[2]} = ${it[0]} (${it[1]})`, speakTxt:'Mikä englanninkielinen sana sopii kuvaan?', sayAns:it[0], sayAnsLang:'en-GB'};
+  return {type:'mc', prompt:`Mitä englannin sana <b>${it[0]}</b> tarkoittaa?`, options:shuffle([it[1],...wr.map(x=>x[1])]), answer:it[1], explain:`${it[0]} = ${it[1]}`, en:it[0]}; }
+Object.assign(GEN,{en1_kuuntele:lvl=>genEn12(lvl,false), en2_sanat:lvl=>genEn12(lvl,true)});
+Object.entries({en1_kuuntele:'Kuuntele ja valitse', en2_sanat:'Sanat ja kuuntelu'}).forEach(([k,n])=>{ TOPIC[k]={name:n}; });
+SUBJ[1].push({id:'en',name:'Englanti',areas:['en1_kuuntele']});
+SUBJ[2].push({id:'en',name:'Englanti',areas:['en2_sanat']});
+
+/* ================= v32: 1.–2. luokka – ympäristöoppi ================= */
+const YO1L=[
+ {l:1,q:'Mikä vuodenaika on, kun lunta sataa ja järvet ovat jäässä?',a:'talvi',w:['kesä','kevät','syksy'],e:'Talvella on kylmä, ja järvet jäätyvät.'},
+ {l:1,q:'Minä vuodenaikana puiden lehdet muuttuvat keltaisiksi ja punaisiksi?',a:'syksyllä',w:['keväällä','kesällä','talvella'],e:'Syksyllä lehtipuut pudottavat lehtensä.'},
+ {l:1,q:'Minä vuodenaikana lumi sulaa ja muuttolinnut palaavat?',a:'keväällä',w:['syksyllä','talvella','kesällä'],e:'Keväällä päivät pitenevät ja lumi sulaa.'},
+ {l:1,q:'Minä vuodenaikana on kesäloma ja voi uida järvessä?',a:'kesällä',w:['talvella','syksyllä','keväällä'],e:'Kesällä on lämmintä.'},
+ {l:2,q:'Mikä vuodenaika tulee talven jälkeen?',a:'kevät',w:['syksy','kesä','talvi'],e:'Järjestys on talvi, kevät, kesä ja syksy.'},
+ {l:2,q:'Mikä vuodenaika tulee kesän jälkeen?',a:'syksy',w:['talvi','kevät','kesä'],e:'Kesän jälkeen tulee syksy.'},
+ {l:1,q:'Mikä eläin sanoo "hau hau"?',a:'koira',w:['kissa','lehmä','lammas'],e:'Koira haukkuu.'},
+ {l:1,q:'Mikä eläin antaa meille maitoa?',a:'lehmä',w:['kissa','koira','hevonen'],e:'Lehmä antaa maitoa.'},
+ {l:1,q:'Mikä eläin munii munia, joita ihmiset syövät?',a:'kana',w:['lehmä','possu','kissa'],e:'Kana munii munia.'},
+ {l:1,q:'Mikä näistä eläimistä osaa lentää?',a:'lintu',w:['kala','koira','sammakko'],e:'Linnuilla on siivet.'},
+ {l:1,q:'Missä kala asuu?',a:'vedessä',w:['puussa','kolossa maassa','pesässä katolla'],e:'Kalat elävät vedessä ja hengittävät kiduksilla.'},
+ {l:2,q:'Mikä eläin viettää talven talvipesässä?',a:'karhu',w:['jänis','hirvi','ilves'],e:'Karhu nukkuu talven talvipesässä.'},
+ {l:2,q:'Minkä eläimen turkki muuttuu talveksi valkoiseksi?',a:'metsäjäniksen',w:['ketun','oravan','hirven'],e:'Valkoinen turkki auttaa jänistä piiloutumaan lumessa.'},
+ {l:2,q:'Mitä monet linnut tekevät syksyllä?',a:'muuttavat etelään',w:['menevät talviunille','rakentavat pesän','vaihtavat sulat vihreiksi'],e:'Muuttolinnut lentävät lämpimiin maihin.'},
+ {l:2,q:'Mikä eläin kerää syksyllä ruokaa talven varalle?',a:'orava',w:['lehmä','kala','lammas'],e:'Orava kätkee käpyjä ja pähkinöitä.'},
+ {l:1,q:'Mikä näistä on puu?',a:'koivu',w:['voikukka','mustikka','sammal'],e:'Koivu on lehtipuu.'},
+ {l:2,q:'Mikä puu on vihreä koko talven?',a:'kuusi',w:['koivu','vaahtera','pihlaja'],e:'Kuusi on havupuu. Sillä on neulaset.'},
+ {l:1,q:'Mikä näistä on marja?',a:'mustikka',w:['käpy','tammenterho','voikukka'],e:'Mustikoita voi poimia metsästä kesällä.'},
+ {l:1,q:'Mitä kasvi tarvitsee kasvaakseen?',a:'vettä ja valoa',w:['maitoa ja leipää','vain pimeää','lunta ja jäätä'],e:'Kasvit tarvitsevat valoa, vettä ja multaa.'},
+ {l:2,q:'Mikä kasvin osa on maan alla?',a:'juuri',w:['kukka','lehti','varsi'],e:'Juuri imee vettä maasta.'},
+ {l:1,q:'Millainen sää on, kun taivaalta tulee vettä?',a:'sateinen',w:['aurinkoinen','tuulinen','luminen'],e:'Sateella kannattaa pukea kumisaappaat.'},
+ {l:1,q:'Mitä puet päälle, kun ulkona on kova pakkanen?',a:'pipon ja lapaset',w:['uimapuvun','sandaalit','lippalakin'],e:'Lämpimät vaatteet suojaavat kylmältä.'},
+ {l:2,q:'Millä mitataan, kuinka lämmin ulkona on?',a:'lämpömittarilla',w:['kellolla','viivoittimella','vaa\'alla'],e:'Lämpömittari näyttää lämpötilan.'},
+ {l:2,q:'Mitä tapahtuu lumelle, kun se lämpenee?',a:'se sulaa vedeksi',w:['se muuttuu kiveksi','se kasvaa isommaksi','se muuttuu hiekaksi'],e:'Lämmössä lumi ja jää sulavat.'},
+ {l:3,q:'Mitä vesi tekee, kun se jäätyy?',a:'muuttuu jääksi',w:['muuttuu höyryksi','katoaa kokonaan','muuttuu lumeksi heti'],e:'Pakkasella vesi jäätyy.'},
+ {l:3,q:'Mikä eläin kuoriutuu munasta?',a:'linnunpoikanen',w:['vasikka','varsa','kissanpentu'],e:'Linnut munivat munia, joista poikaset kuoriutuvat.'},
+ {l:3,q:'Mikä on lehmän poikanen?',a:'vasikka',w:['varsa','karitsa','porsas'],e:'Lehmän poikanen on vasikka.'},
+ {l:3,q:'Mikä on hevosen poikanen?',a:'varsa',w:['vasikka','pentu','porsas'],e:'Hevosen poikanen on varsa.'},
+ {l:3,q:'Mikä on lampaan poikanen?',a:'karitsa',w:['varsa','vasikka','porsas'],e:'Lampaan poikanen on karitsa.'},
+ {l:2,q:'Mitä roskalle pitää tehdä retkellä?',a:'viedä se roskikseen',w:['jättää se metsään','heittää se järveen','haudata se lumeen'],e:'Luonnosta pidetään huolta, eikä sinne jätetä roskia.'},
+ {tf:true,l:1,q:'Talvella on lunta.',e:'Suomessa talvi on usein luminen.'},
+ {tf:false,l:1,q:'Kala osaa lentää.',e:'Kala ui vedessä.'},
+ {tf:true,l:2,q:'Kuusi on havupuu.',e:'Kuusella on neulaset.'},
+ {tf:false,l:2,q:'Kaikki linnut muuttavat talveksi etelään.',e:'Osa linnuista, kuten tiainen, jää Suomeen talveksi.'},
+ {tf:true,l:3,q:'Kasvit tarvitsevat valoa.',e:'Ilman valoa kasvi ei kasva.'}];
+const YO1A=[
+ {l:1,q:'Millä ruumiinosalla näet?',a:'silmillä',w:['korvilla','nenällä','käsillä'],e:'Silmät ovat näköaisti.'},
+ {l:1,q:'Millä ruumiinosalla kuulet?',a:'korvilla',w:['silmillä','suulla','jaloilla'],e:'Korvat kuulevat äänet.'},
+ {l:1,q:'Millä haistat kukan tuoksun?',a:'nenällä',w:['korvalla','polvella','kyynärpäällä'],e:'Nenä haistaa.'},
+ {l:1,q:'Millä maistat ruoan?',a:'kielellä',w:['nenänpäällä','sormella','korvalla'],e:'Kieli maistaa makean, suolaisen, happaman ja karvaan.'},
+ {l:1,q:'Montako sormea on yhdessä kädessä?',a:'viisi',w:['neljä','kuusi','kymmenen'],e:'Yhdessä kädessä on viisi sormea.'},
+ {l:1,q:'Mitä teet ennen syömistä?',a:'pesen kädet',w:['menen nukkumaan','harjaan hiukset','puen takin'],e:'Käsien pesu poistaa pöpöjä.'},
+ {l:1,q:'Kuinka usein hampaat harjataan?',a:'aamulla ja illalla',w:['kerran viikossa','vain jouluna','vain kun ne ovat likaiset'],e:'Hampaat harjataan kahdesti päivässä.'},
+ {l:1,q:'Mikä näistä on terveellinen välipala?',a:'omena',w:['karkkipussi','limsa','pullakahvit'],e:'Hedelmät ja kasvikset ovat hyvä välipala.'},
+ {l:2,q:'Miksi on tärkeää nukkua tarpeeksi?',a:'keho ja aivot lepäävät',w:['silloin ei tarvitse syödä','unessa kasvaa vain tukka','nukkuminen on aina tylsää'],e:'Lapsi tarvitsee noin 10 tunnin yöunet.'},
+ {l:2,q:'Miksi on hyvä liikkua joka päivä?',a:'se pitää kehon terveenä',w:['se tekee aina väsyneeksi','se tekee kengät likaisiksi','se kuluttaa vain aikaa'],e:'Liikunta on hauskaa ja tekee hyvää.'},
+ {l:1,q:'Mistä kohdasta tien voi ylittää turvallisesti?',a:'suojatieltä',w:['mutkan takaa','autojen välistä','mistä vain'],e:'Suojatie on tien ylittämistä varten.'},
+ {l:1,q:'Mitä liikennevalon punainen valo tarkoittaa jalankulkijalle?',a:'odota',w:['juokse','kävele','hyppää'],e:'Punaisella odotetaan ja vihreällä kävellään.'},
+ {l:1,q:'Mitä liikennevalon vihreä valo tarkoittaa jalankulkijalle?',a:'saa kävellä',w:['pitää odottaa','pitää kääntyä takaisin','pitää istua alas'],e:'Katso silti vielä, että autot ovat pysähtyneet.'},
+ {l:1,q:'Mikä suojaa päätä pyöräillessä?',a:'kypärä',w:['pipo','lippalakki','huppu'],e:'Kypärä suojaa päätä, jos kaatuu.'},
+ {l:1,q:'Mikä auttaa autoilijaa näkemään sinut pimeällä?',a:'heijastin',w:['aurinkolasit','reppu','sateenvarjo'],e:'Heijastin näkyy auton valoissa kauas.'},
+ {l:2,q:'Mihin numeroon soitetaan hätätilanteessa?',a:'112',w:['123','911','100'],e:'Hätänumero Suomessa on 112.'},
+ {l:2,q:'Mitä teet, jos eksyt kaupassa?',a:'pyydän apua myyjältä',w:['lähden yksin kotiin','piiloudun hyllyn taakse','menen autoon odottamaan'],e:'Jää paikalleen ja pyydä apua aikuiselta, kuten myyjältä.'},
+ {l:2,q:'Mitä teet, jos tuntematon aikuinen pyytää sinua autoonsa?',a:'en lähde ja kerron aikuiselle',w:['lähden hänen mukaansa','annan hänelle osoitteeni','odotan hänen kanssaan'],e:'Tuntemattoman kyytiin ei lähdetä.'},
+ {l:1,q:'Kuka työskentelee koulussa ja opettaa lapsia?',a:'opettaja',w:['lääkäri','palomies','kokki'],e:'Opettaja opettaa.'},
+ {l:1,q:'Kuka hoitaa sairaita ihmisiä?',a:'lääkäri',w:['bussikuski','opettaja','postinkantaja'],e:'Lääkäri ja hoitaja hoitavat sairaita.'},
+ {l:1,q:'Kuka sammuttaa tulipaloja?',a:'palomies',w:['kokki','kampaaja','opettaja'],e:'Palomies sammuttaa tulipaloja.'},
+ {l:2,q:'Mistä voi lainata kirjoja ilmaiseksi?',a:'kirjastosta',w:['kioskista','apteekista','pankista'],e:'Kirjastosta saa lainata kirjoja.'},
+ {l:2,q:'Mikä on hyvä tapa, kun kaveri on surullinen?',a:'kysyä, mikä on hätänä',w:['nauraa hänelle','lähteä pois','sanoa, ettei kiinnosta'],e:'Kaveria lohdutetaan ja kuunnellaan.'},
+ {l:2,q:'Mitä tarkoittaa, että odottaa omaa vuoroa?',a:'antaa muiden ensin',w:['menee aina ensimmäisenä','työntää muita','lähtee pois jonosta'],e:'Vuoron odottaminen on reilua.'},
+ {l:3,q:'Mikä aisti kertoo, onko tee liian kuumaa?',a:'tunto',w:['kuulo','näkö','haju'],e:'Ihon tuntoaisti tuntee kuuman ja kylmän.'},
+ {l:3,q:'Mikä sydän tekee?',a:'pumppaa verta',w:['ajattelee','sulattaa ruokaa','hengittää ilmaa'],e:'Sydän pumppaa verta kaikkialle kehoon.'},
+ {l:3,q:'Mihin keuhkoja tarvitaan?',a:'hengittämiseen',w:['kävelemiseen','näkemiseen','kuulemiseen'],e:'Keuhkoilla hengitetään.'},
+ {l:3,q:'Mitä kodin osoitteeseen kuuluu?',a:'katu, numero ja kaupunki',w:['oma nimi ja ikä','lempiruoka ja väri','koulun nimi ja luokka'],e:'Osoite kertoo, missä koti on. Se on hyvä opetella ulkoa.'},
+ {tf:true,l:1,q:'Suojatie on tien ylittämistä varten.',e:'Ylitä tie suojatietä pitkin.'},
+ {tf:false,l:1,q:'Heijastinta ei tarvita pimeällä.',e:'Heijastin auttaa autoilijaa näkemään sinut.'},
+ {tf:true,l:2,q:'Kädet pestään ennen ruokailua.',e:'Käsien pesu estää pöpöjen leviämistä.'},
+ {tf:false,l:2,q:'Karkki on hyvä aamupala joka päivä.',e:'Hyvä aamupala on esimerkiksi puuro tai leipä ja hedelmä.'},
+ {tf:true,l:3,q:'Hätänumero on 112.',e:'Siihen soitetaan hätätilanteessa.'}];
+const YO2L=[
+ {l:1,q:'Mikä näistä on nisäkäs?',a:'orava',w:['ahven','kyy','varpunen'],e:'Nisäkkäät imettävät poikasiaan.'},
+ {l:1,q:'Mikä näistä on hyönteinen?',a:'muurahainen',w:['hämähäkki','mato','etana'],e:'Hyönteisellä on kuusi jalkaa.'},
+ {l:2,q:'Montako jalkaa hyönteisellä on?',a:'kuusi',w:['neljä','kahdeksan','kymmenen'],e:'Hyönteisellä on kuusi jalkaa.'},
+ {l:2,q:'Montako jalkaa hämähäkillä on?',a:'kahdeksan',w:['kuusi','neljä','kaksi'],e:'Hämähäkki ei ole hyönteinen. Sillä on kahdeksan jalkaa.'},
+ {l:1,q:'Mistä perhonen kehittyy?',a:'toukasta',w:['munasta suoraan','siemenestä','kivestä'],e:'Muna – toukka – kotelo – perhonen.'},
+ {l:2,q:'Missä sammakko munii munansa?',a:'veteen',w:['puuhun','muurahaispesään','lumeen'],e:'Sammakon munista kuoriutuu nuijapäitä.'},
+ {l:1,q:'Mikä on kasvin osa, josta voi tulla siemeniä?',a:'kukka',w:['juuri','kuori','oksa'],e:'Kukasta kehittyy siemeniä.'},
+ {l:2,q:'Mikä kasvin osa kuljettaa vettä juurista lehtiin?',a:'varsi',w:['kukka','siemen','terälehti'],e:'Varsi kuljettaa vettä ja ravinteita.'},
+ {l:2,q:'Mitä lehdet tarvitsevat tehdäkseen kasville ravintoa?',a:'auringonvaloa',w:['pimeyttä','lunta','hiekkaa'],e:'Lehdet tarvitsevat valoa.'},
+ {l:1,q:'Mikä puu on lehtipuu?',a:'koivu',w:['kuusi','mänty','kataja'],e:'Koivulla on lehdet, jotka putoavat syksyllä.'},
+ {l:1,q:'Mikä puu on havupuu?',a:'mänty',w:['koivu','haapa','vaahtera'],e:'Männyllä on neulaset.'},
+ {l:2,q:'Mikä marja kasvaa metsässä ja on sininen?',a:'mustikka',w:['mansikka','vadelma','puolukka'],e:'Mustikka on sininen metsämarja.'},
+ {l:2,q:'Mikä marja on punainen ja kasvaa metsässä varvussa?',a:'puolukka',w:['mustikka','herukka','karpalo'],e:'Puolukka on punainen metsämarja. Karpalo kasvaa suolla.'},
+ {l:2,q:'Missä kasvaa paljon puita?',a:'metsässä',w:['järvessä','kaupan katolla','hiekkarannalla'],e:'Metsässä elää monia kasveja ja eläimiä.'},
+ {l:2,q:'Mikä eläin elää järvessä?',a:'hauki',w:['jänis','orava','kettu'],e:'Hauki on kala.'},
+ {l:3,q:'Mitä tarkoittaa ravintoketju "ruoho – jänis – kettu"?',a:'kettu syö jäniksen, jänis syö ruohoa',w:['ruoho syö jäniksen','jänis syö ketun','kaikki syövät ruohoa'],e:'Ravintoketju kertoo, kuka syö kenet.'},
+ {l:2,q:'Milloin on Suomessa vuoden pisin päivä?',a:'juhannuksen aikaan',w:['joulun aikaan','pääsiäisenä','uutena vuotena'],e:'Juhannuksen aikaan aurinko on taivaalla pisimpään.'},
+ {l:2,q:'Milloin päivät ovat Suomessa lyhyimmillään?',a:'talvella',w:['kesällä','keväällä','juhannuksena'],e:'Talvella on pimeää suuren osan päivästä.'},
+ {l:3,q:'Miksi on kesä ja talvi?',a:'Maa kiertää Aurinkoa kallellaan',w:['Aurinko sammuu talveksi','Kuu peittää Auringon','Maa pysähtyy talvella'],e:'Maan akseli on kallellaan, siksi vuodenajat vaihtuvat.'},
+ {l:1,q:'Mikä on veden olomuoto, kun se on jäätä?',a:'kiinteä',w:['neste','kaasu','pehmeä'],e:'Jää on kiinteää vettä.'},
+ {l:2,q:'Mitä vedelle tapahtuu, kun se kiehuu?',a:'siitä tulee höyryä',w:['siitä tulee jäätä','se muuttuu maidoksi','se muuttuu kiveksi'],e:'Kiehuva vesi muuttuu vesihöyryksi.'},
+ {l:2,q:'Mikä näistä kelluu vedessä?',a:'puinen tikku',w:['kivi','rautanaula','kolikko'],e:'Puu on kevyttä ja kelluu.'},
+ {l:3,q:'Mikä näistä vetää rautanaulaa puoleensa?',a:'magneetti',w:['villasukka','puulusikka','kumipallo'],e:'Magneetti vetää rautaa puoleensa.'},
+ {l:1,q:'Mihin jäteastiaan banaaninkuori kuuluu?',a:'biojätteeseen',w:['lasinkeräykseen','metallinkeräykseen','paperinkeräykseen'],e:'Ruoantähteet ovat biojätettä.'},
+ {l:2,q:'Mihin sanomalehti lajitellaan?',a:'paperinkeräykseen',w:['biojätteeseen','lasinkeräykseen','metallinkeräykseen'],e:'Lehdet kierrätetään paperina.'},
+ {tf:true,l:1,q:'Hämähäkillä on kahdeksan jalkaa.',e:'Hyönteisillä on kuusi jalkaa, hämähäkillä kahdeksan.'},
+ {tf:false,l:1,q:'Koivu on havupuu.',e:'Koivu on lehtipuu.'},
+ {tf:true,l:2,q:'Juuret ottavat vettä maasta.',e:'Juuri imee vettä ja ravinteita.'},
+ {tf:false,l:2,q:'Kivi kelluu vedessä.',e:'Kivi on painava ja uppoaa.'},
+ {tf:true,l:3,q:'Perhonen on ollut ensin toukka.',e:'Toukka koteloituu ja muuttuu perhoseksi.'}];
+const YO2A=[
+ {l:1,q:'Mikä ilmansuunta on kartalla yleensä ylhäällä?',a:'pohjoinen',w:['etelä','itä','länsi'],e:'Kartan yläreuna on yleensä pohjoinen.'},
+ {l:1,q:'Mikä on pohjoisen vastakkainen ilmansuunta?',a:'etelä',w:['itä','länsi','ylös'],e:'Pohjoinen ja etelä ovat vastakkaiset.'},
+ {l:2,q:'Mistä ilmansuunnasta aurinko nousee?',a:'idästä',w:['lännestä','pohjoisesta','etelästä'],e:'Aurinko nousee idästä ja laskee länteen.'},
+ {l:2,q:'Mihin ilmansuuntaan aurinko laskee?',a:'länteen',w:['itään','pohjoiseen','etelään'],e:'Aurinko laskee länteen.'},
+ {l:1,q:'Mikä kartta kuvaa?',a:'paikkaa ylhäältä katsottuna',w:['paikkaa sivulta katsottuna','vain säätä','vain kellonaikaa'],e:'Kartassa paikka on piirretty ylhäältä päin.'},
+ {l:2,q:'Mikä on Suomen pääkaupunki?',a:'Helsinki',w:['Tampere','Turku','Oulu'],e:'Helsinki on Suomen pääkaupunki.'},
+ {l:2,q:'Millainen on Suomen lippu?',a:'sininen risti valkoisella pohjalla',w:['punainen risti valkoisella pohjalla','keltainen risti sinisellä pohjalla','valkoinen risti punaisella pohjalla'],e:'Suomen lipussa on sininen risti.'},
+ {l:3,q:'Mikä Suomen naapurimaa on idässä?',a:'Venäjä',w:['Ruotsi','Norja','Viro'],e:'Suomen itäinen naapurimaa on Venäjä.'},
+ {l:3,q:'Mikä Suomen naapurimaa on lännessä?',a:'Ruotsi',w:['Venäjä','Viro','Saksa'],e:'Ruotsi on Suomen länsinaapuri.'},
+ {l:1,q:'Mitä aistia käytät, kun kuuntelet musiikkia?',a:'kuuloa',w:['makua','hajua','näköä'],e:'Korvat kuulevat.'},
+ {l:2,q:'Montako aistia ihmisellä yleensä sanotaan olevan?',a:'viisi',w:['kolme','kymmenen','kaksi'],e:'Näkö, kuulo, haju, maku ja tunto.'},
+ {l:1,q:'Mikä näistä kuuluu lautasmalliin eniten?',a:'kasvikset',w:['karkit','keksit','limsa'],e:'Puolet lautasesta täytetään kasviksilla.'},
+ {l:2,q:'Mitä kannattaa juoda janoon?',a:'vettä',w:['energiajuomaa','limsaa','kahvia'],e:'Vesi on paras janojuoma.'},
+ {l:2,q:'Miksi aamupala on tärkeä?',a:'se antaa voimia koulupäivään',w:['se korvaa yöunet','sen jälkeen ei tarvitse syödä','sillä ei ole merkitystä'],e:'Aamupala auttaa jaksamaan.'},
+ {l:2,q:'Mitä tehdään, jos näkee kiusaamista?',a:'kerrotaan aikuiselle',w:['katsotaan sivusta','liitytään mukaan','unohdetaan asia'],e:'Aikuinen voi auttaa lopettamaan kiusaamisen.'},
+ {l:2,q:'Miten toimit, jos pyöräilet ja tulee punainen valo?',a:'pysähdyn',w:['ajan kovempaa','ajan jalkakäytävälle','soitan kelloa ja jatkan'],e:'Punaisella pysähdytään.'},
+ {l:2,q:'Mikä liikennemerkki tarkoittaa, että pitää pysähtyä?',a:'STOP-merkki',w:['P-merkki','suojatiemerkki','pyörätiemerkki'],e:'STOP-merkillä pysähdytään aina.'},
+ {l:3,q:'Mitä kolmion muotoinen, punareunainen liikennemerkki yleensä tarkoittaa?',a:'varoitusta vaarasta',w:['pysäköintipaikkaa','pyörätietä','sairaalaa'],e:'Varoitusmerkit ovat kolmioita.'},
+ {l:3,q:'Miten ylität tien, jossa ei ole suojatietä?',a:'katson molempiin suuntiin ennen ylitystä',w:['juoksen nopeasti yli','ylitän mutkassa','ylitän autojen välistä'],e:'Pysähdy, katso ja kuuntele.'},
+ {l:1,q:'Mitä tehdään, kun palohälytin piippaa kotona?',a:'mennään ulos ja kerrotaan aikuiselle',w:['piiloudutaan sängyn alle','jatketaan leikkiä','avataan kaikki ikkunat ja jäädään sisään'],e:'Tulipalossa poistutaan heti ulos.'},
+ {l:2,q:'Mikä materiaali on lasi?',a:'kovaa ja särkyvää',w:['pehmeää ja venyvää','nestemäistä','aina kuumaa'],e:'Lasi voi särkyä.'},
+ {l:2,q:'Mistä paperi tehdään?',a:'puusta',w:['kivestä','lasista','muovista'],e:'Paperi tehdään puusta.'},
+ {l:3,q:'Mikä näistä johtaa sähköä?',a:'metallilanka',w:['muovinen viivoitin','puinen lusikka','kumihanska'],e:'Metallit johtavat sähköä.'},
+ {l:3,q:'Miten toimitaan koulussa palohälytyksen aikana?',a:'kuunnellaan opettajan ohjeita',w:['haetaan reppu kotoa','soitetaan kaverille','jäädään luokkaan'],e:'Poistutaan rauhallisesti opettajan ohjeiden mukaan.'},
+ {tf:true,l:1,q:'Aurinko nousee idästä.',e:'Aurinko nousee idästä ja laskee länteen.'},
+ {tf:false,l:1,q:'Limsa on paras janojuoma.',e:'Vesi on paras janojuoma.'},
+ {tf:true,l:2,q:'Helsinki on Suomen pääkaupunki.',e:'Helsinki on Suomen suurin kaupunki ja pääkaupunki.'},
+ {tf:false,l:2,q:'Punaista valoa päin saa kävellä, jos on kiire.',e:'Punaisella odotetaan aina.'},
+ {tf:true,l:3,q:'Paperi tehdään puusta.',e:'Puusta tehdään paperia ja pahvia.'}];
+Object.assign(GEN,{yo1_luonto:factGen(YO1L), yo1_arki:factGen(YO1A), yo2_luonto:factGen(YO2L), yo2_arki:factGen(YO2A)});
+Object.entries({yo1_luonto:'Luonto ja vuodenajat', yo1_arki:'Minä, terveys ja liikenne', yo2_luonto:'Eläimet, kasvit ja aineet', yo2_arki:'Kartta, terveys ja turvallisuus'}).forEach(([k,n])=>{ TOPIC[k]={name:n}; });
+SUBJ[1].push({id:'yo',name:'Ympäristöoppi',areas:['yo1_luonto','yo1_arki']});
+SUBJ[2].push({id:'yo',name:'Ympäristöoppi',areas:['yo2_luonto','yo2_arki']});
+[1,2].forEach(g=>SUBJ[g].flatMap(x=>x.areas).forEach(t=>{ if(!ALLT.includes(t)) ALLT.push(t); S.levels[t]=S.levels[t]||1; S.hist[t]=S.hist[t]||[]; }));
+GRADE_DESC[1]='Luvut 0–20, yhteen- ja vähennyslasku, kirjaimet ja tavut, englannin kuuntelu, luonto ja liikenne';
+GRADE_DESC[2]='Luvut 0–100, kertolaskun alku, kello ja raha, oikeinkirjoitus, englannin sanat, eläimet ja kartta';
+
+/* ================= v33: 1.–2. luokan omat tarinat (hevonen ja koira) ================= */
+/* Lyhyet tarinat: muutama lyhyt virke per kohta. Askeleet: ['t',bg,teksti,extra] teksti, ['q',bg,teksti,aine,ohje] tehtävä,
+   ['c',bg,teksti,[[nappi,loppu],[nappi,loppu]]] valinta, ['e',bg,teksti,extra] loppu ({end} = valinnan seuraus). */
+function story1(title, steps, teaser, daily){ const nodes={}; steps.forEach((s,i)=>{ const id='n'+(i+1), nx='n'+(i+2), [k,bg,text]=s, n={bg, text};
+    if(k==='t'){ if(s[3]) n.extras=[s[3]]; n.next=nx; }
+    else if(k==='q'){ n.task={subj:s[3], other:s[4]}; n.next=nx; }
+    else if(k==='c'){ n.choices=s[3].map(([label,end])=>({label, set:{end}, next:nx})); }
+    else { if(s[3]) n.extras=[s[3]]; n.end=true; }
+    nodes[id]=n; });
+  return daily?{title, teaser, reward:30, daily:true, start:'n1', nodes}:{title, reward:20, start:'n1', nodes}; }
+Object.assign(ADV,{
+  h1_ystava:story1('Uusi ystävä',[['t','stable','Talliin tulee uusi hevonen. Sen nimi on {pet}.'],['q','stable','{pet} haluaa porkkanoita. Ratkaise, niin saat porkkanat!','ma','Porkkanatehtävä:'],
+    ['c','meadow','{pet} katsoo sinua. Mitä teet?',[['Silitän turpaa','{pet} hörisee iloisesti.'],['Annan omenan','{pet} rouskuttaa omenan ja tönäisee sinua kiitokseksi.']]],['e','meadow','{end} Teistä tulee parhaat ystävät.','hearts']]),
+  h1_harja:story1('Harjauspäivä',[['t','stable','{pet} on pyörinyt mudassa. Se on ihan ruskea!'],['q','stable','Etsi oikea harja. Ratkaise tehtävä:','ai','Harjalaatikon tehtävä:'],
+    ['c','stable','Mistä aloitat?',[['Harjaan selän','Harjaat selän kiiltäväksi.'],['Harjaan harjan','Harjaat harjan pehmeäksi.']]],['q','stable','Vielä kaviot! Ratkaise:','yo','Kaviotehtävä:'],['e','meadow','{end} {pet} kiiltää kuin uusi lelu.','sparkle']]),
+  h1_kenka:story1('Kadonnut kenkä',[['t','meadow','Laitumelta löytyy hevosenkenkä. Kenen se on?','horseshoe'],['q','meadow','Lämmitellään ennen kisaa. Ratkaise:','ma','Lämmittelytehtävä:'],
+    ['c','forest','Kengän vieressä on jälkiä. Mitä teet?',[['Seuraan jälkiä','Jäljet vievät pienen ponin luo. Se on hukannut kenkänsä!'],['Kysyn tallimestarilta','Tallimestari tietää: kenkä on naapurin ponin.']]],
+    ['q','meadow','Viedään kenkä takaisin. Ratkaise vielä:','en','Matkan tehtävä:'],['e','meadow','{end} Saat kiitokseksi ruusukkeen.','ribbon']]),
+  h1_kisat:story1('Pienet kisat',[['t','meadow','Tallilla on pienet ponikisat!','ribbon'],['q','meadow','Ensin pujottelu. Ratkaise:','ma','Pujottelutehtävä:'],
+    ['c','meadow','Edessä on pieni este. Mitä teet?',[['Hyppäämme yli','{pet} hyppää kevyesti esteen yli.'],['Kierrämme rauhassa','Kierrätte esteen rauhassa ja varovasti.']]],
+    ['q','meadow','Viimeinen tehtävä ennen maalia:','ai','Maalisuoran tehtävä:'],['e','meadow','{end} Tuomari antaa teille ruusukkeen reippaudesta!','ribbon']]),
+  h1_tahti:story1('Tähtiyö',[['t','night','On ilta. Taivaalla loistaa tähtiä.','moon'],['q','night','Taivaalla on tähtiä. Ratkaise:','ma','Tähtitehtävä:'],
+    ['c','night','{pet} haluaa kuiskata salaisuuden. Kuunteletko?',[['Kuuntelen','{pet} hörähtää hiljaa: se haluaa olla kanssasi aina.'],['Kerron ensin oman','Kerrot, että {pet} on paras ystäväsi.']]],
+    ['q','night','Vielä iltatehtävä:','yo','Iltatehtävä:'],['e','night','{end} Hyvää yötä, {pet}!','hearts']]),
+  d1_koti:story1('Pentu tulee kotiin',[['t','home','Kotiin tulee pieni koiranpentu. Sen nimi on {pet}.'],['q','home','{pet} tarvitsee ruokakupin. Ratkaise:','ma','Ruokakupin tehtävä:'],
+    ['c','home','Missä {pet} nukkuu?',[['Omassa pedissä','{pet} käpertyy omaan petiinsä.'],['Sohvan vieressä','{pet} nukahtaa sohvan viereen kerälle.']]],['e','homenight','{end} Hyvää yötä, pikku pentu!','hearts']]),
+  d1_lenkki:story1('Ensimmäinen lenkki',[['t','park','Lähdetään ensimmäiselle lenkille!','pawprints'],['q','park','Laita hihna kiinni. Ratkaise:','ai','Hihnatehtävä:'],
+    ['c','park','Puistossa on lätäkkö. Mitä teet?',[['Kierrämme sen','Kierrätte lätäkön, ja tassut pysyvät kuivina.'],['Hyppäämme yli','{pet} hyppää, mutta tassut kastuvat silti.']]],
+    ['q','park','Kotimatkalla vielä yksi tehtävä:','yo','Kotimatkan tehtävä:'],['e','home','{end} Lenkki oli hauska!','pawprints']]),
+  d1_temppu:story1('Temppukoulu',[['t','park','Opetellaan temppu: istu!'],['q','park','Anna herkku, kun {pet} istuu. Ratkaise:','ma','Herkkutehtävä:'],
+    ['c','park','{pet} oppi istumaan! Mikä temppu seuraavaksi?',[['Anna tassu','{pet} ojentaa tassun kuin herrasmies.'],['Pyöri ympäri','{pet} pyörii ympäri ja innostuu haukkumaan.']]],
+    ['q','park','Vielä viimeinen harjoitus:','en','Temppuharjoitus:'],['e','park','{end} Olet hyvä opettaja!','sparkle']]),
+  d1_lelu:story1('Kadonnut lelu',[['t','home','Lempilelu on kadonnut, ja {pet} etsii sitä joka paikasta.'],['q','home','Etsi vihjeitä. Ratkaise:','ai','Vihjetehtävä:'],
+    ['c','home','Sohvan alta kuuluu vingahdus. Mistä etsit?',[['Sohvan alta','Lelu löytyy sohvan alta!'],['Pihalta','Lelu löytyy pihalta pensaan juurelta.']]],['e','home','{end} {pet} heiluttaa häntää onnellisena.','hearts']]),
+  d1_nayttely:story1('Koiranäyttely',[['t','park','Puistossa on pieni koiranäyttely.','ribbon'],['q','park','Ensin harjataan turkki. Ratkaise:','yo','Harjaustehtävä:'],
+    ['c','park','Tuomari pyytää kävelemään ympyrän. Miten kävelette?',[['Rauhallisesti','Kävelette rauhassa ja kauniisti.'],['Hyppien','{pet} hyppii iloisesti, ja yleisö nauraa.']]],
+    ['q','park','Viimeinen tehtävä:','ma','Näyttelytehtävä:'],['e','park','{end} {pet} saa ruusukkeen: Iloisin pentu!','ribbon']]),
+  /* päivän seikkailut, hevonen */
+  hd1_sade:story1('Sadepäivä',[['t','stable','Ulkona sataa. {pet} ei halua kastua.','rain'],['q','stable','Keksitään sisäleikki. Ratkaise:','ma','Leikkitehtävä:'],['c','stable','Mitä leikitään?',[['Piilosta','{pet} piiloutuu heinäkasaan, mutta häntä jää näkyviin.'],['Laulua','Laulat, ja {pet} hirnuu mukana.']]],['e','stable','{end} Sadepäivä oli hauska.','hearts']],'Ulkona sataa. Mitä tallissa tehdään?',true),
+  hd1_piknik:story1('Eväsretki',[['t','meadow','Lähdetään eväsretkelle laitumelle.'],['q','meadow','Pakataan eväät. Ratkaise:','ma','Eväslaskut:'],['c','meadow','Mitä {pet} saa eväiksi?',[['Porkkanan','{pet} rouskuttaa porkkanan hetkessä.'],['Omenan','{pet} syö omenan ja pyytää lisää.']]],['e','meadow','{end} Laitumella on ihana olla.','hearts']],'Eväsretki laitumelle!',true),
+  hd1_perhonen:story1('Perhonen',[['t','meadow','Perhonen istuu hevosen nenällä. {pet} katsoo sitä silmät ristissä.','butterfly'],['q','meadow','Perhonen odottaa. Ratkaise:','yo','Perhostehtävä:'],['c','meadow','Perhonen lentää. Mitä {pet} tekee?',[['Juoksee perässä','{pet} laukkaa perhosen perässä.'],['Aivastaa','{pet} aivastaa niin, että perhonen lentää kauas.']]],['e','meadow','{end} Mikä päivä!','butterfly']],'Kuka kutittaa nenää?',true),
+  hd1_lumi:story1('Lumileikit',[['t','meadow','Yöllä on satanut lunta.'],['q','meadow','Tehdään lumiukko. Ratkaise:','ma','Lumiukkotehtävä:'],['c','meadow','Mitä {pet} tekee lumiukolle?',[['Syö sen porkkananenän','Lumiukko jää ilman nenää.'],['Haistelee sitä','{pet} saa lunta nenäänsä.']]],['e','meadow','{end} Talvi on hauskaa aikaa.','sparkle']],'Lunta, lunta, lunta!',true),
+  hd1_kukka:story1('Kukkaseppele',[['t','meadow','Laitumella kasvaa kukkia.'],['q','meadow','Poimitaan kukkia. Ratkaise:','ai','Kukkatehtävä:'],['c','meadow','Kenelle teet seppeleen?',[['Hevoselle','{pet} saa kukkaseppeleen kaulaan.'],['Itselleni','Laitat seppeleen päähäsi. {pet} yrittää syödä sen.']]],['e','meadow','{end} Kaikki hymyilevät.','hearts']],'Kukkia laitumella.',true),
+  hd1_heina:story1('Heinäpaali',[['t','stable','Talliin tuodaan iso heinäpaali.'],['q','stable','Paljonko heinää tarvitaan? Ratkaise:','ma','Heinätehtävä:'],['c','stable','{pet} haluaa maistaa heti. Annatko?',[['Annan vähän','{pet} saa maistiaisen ja hörisee.'],['Odotetaan iltaan','{pet} odottaa kärsivällisesti iltaruokaan asti.']]],['e','stable','{end} Tallissa tuoksuu heinältä.','hearts']],'Iso heinäpaali saapuu.',true),
+  hd1_aamu:story1('Aamuruoka',[['t','stable','On aamu. {pet} hirnuu: ruoka-aika!'],['q','stable','Mitataan kauraa. Ratkaise:','ma','Kauratehtävä:'],['c','stable','Mitä vielä annat?',[['Raikasta vettä','{pet} juo ison kulauksen vettä.'],['Harjaan harjan','{pet} sulkee silmänsä tyytyväisenä.']]],['e','meadow','{end} Hyvä päivä alkaa.','hearts']],'Kuka herää ensimmäisenä?',true),
+  /* päivän seikkailut, koira */
+  dd1_kylpy:story1('Kylpypäivä',[['t','home','{pet} on mutainen. Kylpy odottaa!','puddle'],['q','home','Haetaan pyyhe. Ratkaise:','ma','Pyyhetehtävä:'],['c','home','{pet} ravistelee itseään. Mitä teet?',[['Nauran','Kaikki kastuvat, ja nauratte yhdessä.'],['Otan pyyhkeen','Kuivaat pennun pehmeällä pyyhkeellä.']]],['e','home','{end} {pet} on puhdas ja pörröinen.','sparkle']],'Mutainen pentu!',true),
+  dd1_pallo:story1('Pallo hukassa',[['t','park','Pallo lensi pensaaseen.','ball'],['q','park','Etsitään pallo. Ratkaise:','ai','Etsintätehtävä:'],['c','park','Mistä {pet} etsii?',[['Pensaasta','{pet} löytää pallon pensaasta.'],['Penkin alta','Pallo on penkin alla.']]],['e','park','{end} Leikki jatkuu.','ball']],'Minne pallo meni?',true),
+  dd1_lumi:story1('Lumihanki',[['t','park','Puistossa on paljon lunta.'],['q','park','Tehdään lumipalloja. Ratkaise:','ma','Lumipallotehtävä:'],['c','park','{pet} hyppää hankeen. Mitä tapahtuu?',[['Se katoaa lumeen','Vain hännänpää näkyy lumesta.'],['Se kaivaa tunnelin','{pet} kaivaa tunnelin ja tulee ulos toisesta päästä.']]],['e','park','{end} Talvi on hauskaa.','sparkle']],'Lunta riittää!',true),
+  dd1_posti:story1('Posti tulee',[['t','home','Postiluukku kolahtaa. {pet} haukkuu!','letter'],['q','home','Luetaan kirje. Ratkaise:','ai','Kirjetehtävä:'],['c','home','Kirjeessä on kutsu. Mihin?',[['Koirajuhliin','{pet} pääsee koirajuhliin!'],['Mummolaan','Mummo kutsuu teidät kylään.']]],['e','home','{end} Mikä ilo!','hearts']],'Mitä postissa tuli?',true),
+  dd1_herkku:story1('Herkkupäivä',[['t','home','Leivotaan koirankeksejä.'],['q','home','Keksipurkki aukeaa, kun ratkaiset:','ma','Keksitehtävä:'],['c','home','Kuka saa ensimmäisen keksin?',[['{pet}','{pet} rouskuttaa keksin onnellisena.'],['Naapurin koira','Naapurin koira saa keksin, ja {pet} saa kaksi.']]],['e','home','{end} Herkkupäivä oli herkullinen.','hearts']],'Koirankeksejä uunissa.',true),
+  dd1_kaveri:story1('Kaveri puistossa',[['t','park','Puistossa on uusi koira.'],['q','park','Tutustutaan. Ratkaise:','yo','Tutustumistehtävä:'],['c','park','Mitä koirat tekevät?',[['Juoksevat kilpaa','Koirat juoksevat kilpaa ympäri puistoa.'],['Leikkivät pallolla','Koirat leikkivät yhdessä pallolla.']]],['e','park','{end} {pet} sai uuden kaverin.','pawprints']],'Uusi kaveri!',true),
+  dd1_satu:story1('Iltasatu',[['t','homenight','On ilta. {pet} on väsynyt.','moon'],['q','homenight','Valitaan satukirja. Ratkaise:','ai','Satutehtävä:'],['c','homenight','Mikä satu luetaan?',[['Tarina kuusta','Luet sadun kuusta, ja {pet} haukottelee.'],['Tarina luusta','Luet sadun isosta luusta. {pet} heiluttaa häntää unissaan.']]],['e','homenight','{end} Hyvää yötä!','moon']],'Mikä satu tänään?',true)});
+const CHAPTERS1=[{req:0, title:'Uusi ystävä', adv:'h1_ystava', text:'Talliin tulee uusi hevonen.'},{req:100, title:'Harjauspäivä', adv:'h1_harja', text:'Mutainen hevonen tarvitsee harjausta.'},
+  {req:250, title:'Kadonnut kenkä', adv:'h1_kenka', text:'Kenen kenkä laitumelta löytyi?'},{req:450, title:'Pienet kisat', adv:'h1_kisat', text:'Ponikisat ja ruusukkeet.'},{req:700, title:'Tähtiyö', adv:'h1_tahti', text:'Iltasalaisuus tähtien alla.'}];
+const CHAPTERS_DOG1=[{req:0, title:'Pentu tulee kotiin', adv:'d1_koti', text:'Uusi perheenjäsen saapuu.'},{req:100, title:'Ensimmäinen lenkki', adv:'d1_lenkki', text:'Hihna kiinni ja ulos!'},
+  {req:250, title:'Temppukoulu', adv:'d1_temppu', text:'Istu, tassu ja pyöri.'},{req:450, title:'Kadonnut lelu', adv:'d1_lelu', text:'Mihin lempilelu katosi?'},{req:700, title:'Koiranäyttely', adv:'d1_nayttely', text:'Kuka on iloisin pentu?'}];
+DAILY.horse[1]=['hd1_sade','hd1_piknik','hd1_perhonen','hd1_lumi','hd1_kukka','hd1_heina','hd1_aamu'];
+DAILY.dog[1]=['dd1_kylpy','dd1_pallo','dd1_lumi','dd1_posti','dd1_herkku','dd1_kaveri','dd1_satu'];
+
+/* ================= v34: 1.–2. luokan omat urheilutarinat (kauden seikkailut) ================= */
+const sp1=(title,steps)=>Object.assign(story1(title,steps),{reward:40});
+Object.assign(ADV,{
+  /* --- jääkiekko --- */
+  hk1_luistin:sp1('Kadonnut luistin',[['t','locker','Treenit alkavat pian. Toinen luistin on kadonnut!'],['q','locker','Luistin löytyy, kun ratkaiset tehtävän!','ma','Luistintehtävä:'],
+    ['c','locker','Mistä etsit?',[['Penkin alta','Luistin on penkin alla. Se oli piilossa!'],['Valmentajalta','Valmentaja nauraa. Luistin oli hänen kassissaan.']]],['e','rink','{end} Nyt pääset jäälle. Vauhtia!','sparkle']]),
+  hk1_kiekko:sp1('Ensimmäinen maali',[['t','rink','Tänään on peli. Sinä saat kiekon.','stick'],['q','rink','Ennen peliä lämmitellään. Ratkaise:','ma','Lämmittelytehtävä:'],
+    ['c','rink','Maali on edessä. Mitä teet?',[['Lauon','Kiekko lentää maaliin. Maali!'],['Syötän kaverille','Kaveri tekee maalin. Te tuuletatte yhdessä!']]],['e','rink','{end} Koko joukkue hymyilee.','hearts']]),
+  hk1_lumi:sp1('Lumiukko-treeni',[['t','snow','Ulkona on paljon lunta. Treenit ovat tänään pihalla.'],['q','snow','Valmentajalla on kysymys. Vastaa:','yo','Talvitehtävä:'],
+    ['c','snow','Mitä tehdään ensin?',[['Lumiukko','Lumiukko saa kypärän ja mailan.'],['Lumisota','Lumipallot lentävät. Kaikki nauravat.']]],['e','snow','{end} Sitten luistellaan lammella.','sparkle']]),
+  hk1_evas:sp1('Eväsretki',[['t','locker','Joukkue lähtee bussilla peliin. Kaikilla on eväät.'],['q','locker','Bussissa on aikaa. Ratkaise:','ai','Bussitehtävä:'],['q','locker','Vielä yksi tehtävä ennen syömistä:','ma','Omenatehtävä:'],
+    ['c','locker','Mitä syöt ensin?',[['Voileivän','Voileipä antaa voimaa peliin.'],['Omenan','Omena rouskuu. Nam!']]],['e','rink','{end} Peli voi alkaa!','hearts']]),
+  hk1_hanskat:sp1('Onnenhanskat',[['t','locker','Saat vanhat hanskat lahjaksi. Ne ovat kuulemma onnenhanskat.','gloves'],['q','locker','Hanskassa on lappu, jossa on tehtävä:','ai','Lapun tehtävä:'],
+    ['c','rink','Laitatko hanskat peliin?',[['Laitan','Hanskat tuntuvat taikahanskoilta. Syöttö osuu aina!'],['Säästän ne','Pelaat omilla hanskoilla ja onnistut silti hienosti.']]],['e','rink','{end} Onni oli sinussa itsessäsi.','sparkle']]),
+  hk1_maskotti:sp1('Pieni maskotti',[['t','rink','Hallissa on uusi maskotti. Se on pieni pingviini.','mascot'],['q','rink','Pingviini puhuu englantia. Ratkaise:','en','Pingviinin tehtävä:'],
+    ['c','rink','Pingviini haluaa tanssia. Mitä teet?',[['Tanssin mukana','Yleisö taputtaa teidän tanssille.'],['Annan popcornia','Pingviini syö popcornia ja hyppii iloisena.']]],['e','rink','{end} Pingviinistä tulee ystäväsi.','popcorn']]),
+  /* --- jalkapallo --- */
+  fb1_pallo:sp1('Karkuripallo',[['t','pitch','Pallo vierii kentältä ulos. Se menee pusikkoon!','fball'],['q','pitch','Pallo löytyy, kun ratkaiset tehtävän:','ma','Etsintätehtävä:'],
+    ['c','park','Mistä löydät pallon?',[['Pusikosta','Pallo on pusikossa. Siinä istuu myös siili!'],['Puun juurelta','Pallo on puun juurella. Orava katsoo sitä.']]],['e','pitch','{end} Treeni jatkuu.','sparkle']]),
+  fb1_sade:sp1('Sadetreeni',[['t','pitchrain','Sataa vettä. Kenttä on märkä.','rain'],['q','pitchrain','Treenataan katoksessa. Ratkaise:','yo','Sadetehtävä:'],
+    ['c','pitchrain','Mitä teette?',[['Pelataan sateessa','Kaikki ovat mutaisia ja iloisia.'],['Hypitään lätäköissä','Lätäköt loiskuvat. Splash!']]],['e','pitch','{end} Sitten aurinko tulee esiin.','sparkle']]),
+  fb1_kengat:sp1('Uudet kengät',[['t','locker','Saat uudet nappikset. Ne ovat kirkkaan vihreät!','boots'],['q','locker','Ensin solmitaan nauhat. Ratkaise:','ma','Nauhatehtävä:'],
+    ['c','pitch','Mitä kokeilet ensin?',[['Juoksua','Olet nopea kuin tuuli!'],['Laukausta','Pallo lentää suoraan maaliin.']]],['e','pitch','{end} Kengät ovat parhaat.','hearts']]),
+  fb1_kirje:sp1('Kirje kentällä',[['t','pitch','Maalin vieressä on kirje. Kuka sen jätti?','letter'],['q','pitch','Kirjeessä on tehtävä:','ai','Kirjeen ensimmäinen tehtävä:'],['q','pitch','Kääntöpuolella on vielä tehtävä:','ma','Kirjeen toinen tehtävä:'],
+    ['c','pitch','Kirjeessä lukee: "Etsi pelaaja numero 7." Mitä teet?',[['Etsin numeron 7','Se on valmentaja! Hän kirjoitti kirjeen.'],['Kysyn kavereilta','Kaverit nauravat. Valmentaja kirjoitti kirjeen.']]],['e','pitch','{end} Kirjeessä on kutsu kesäleirille!','sparkle']]),
+  fb1_pilli:sp1('Pillin ääni',[['t','pitch','Tuomarin pilli soi. Peli alkaa!','whistle'],['q','pitch','Ennen alkua lämmitellään. Ratkaise:','ma','Lämmittelytehtävä:'],
+    ['c','pitch','Sinä saat pallon. Mitä teet?',[['Kuljetan','Kuljetat pallon kolmen pelaajan ohi.'],['Syötän','Hyvä syöttö! Kaveri tekee maalin.']]],['e','pitch','{end} Peli päättyy, ja kaikki kättelevät.','hearts']]),
+  fb1_vieras:sp1('Vieras joukkue',[['t','pitch','Peliin tulee joukkue Englannista. He puhuvat englantia.','ball'],['q','pitch','Vieraat tervehtivät. Ratkaise:','en','Englannin tehtävä:'],
+    ['c','pitch','Peli on ohi. Mitä teet?',[['Vaihdan paidan','Saat englantilaisen paidan. Se on iso!'],['Sanon kiitos','Sanot "Thank you!" Vieraat hymyilevät.']]],['e','pitch','{end} Teistä tulee ystäviä.','sparkle']]),
+  /* --- salibandy --- */
+  sb1_pallo:sp1('Reikäpallo',[['t','hall','Salibandypallossa on monta reikää.','sball'],['q','hall','Treeni alkaa tehtävällä:','ma','Pallotehtävä:'],
+    ['c','hall','Pallo pomppii nurkkaan. Mitä teet?',[['Juoksen perään','Saat pallon kiinni. Nopea!'],['Otan uuden pallon','Korissa on monta palloa. Peli jatkuu.']]],['e','hall','{end} Treenit ovat hauskat.','sparkle']]),
+  sb1_maila:sp1('Oma maila',[['t','locker','Saat oman mailan. Siinä on sinun nimesi.','sstick'],['q','locker','Ensin pitää ratkaista tehtävä:','ai','Mailatehtävä:'],
+    ['c','hall','Minkä värisen teipin laitat?',[['Punaisen','Punainen teippi näkyy kauas.'],['Sinisen','Sininen teippi on kuin meri.']]],['e','hall','{end} Maila on valmis peliin.','hearts']]),
+  sb1_lasit:sp1('Suojalasit',[['t','locker','Valmentaja sanoo: "Muista suojalasit!"','goggles'],['q','locker','Valmentajalla on kysymys. Vastaa:','yo','Valmentajan kysymys:'],
+    ['c','hall','Laseissa on huurua. Mitä teet?',[['Pyyhin ne','Nyt näet hyvin.'],['Kysyn apua','Kaveri auttaa. Lasit ovat taas kirkkaat.']]],['e','hall','{end} Silmät ovat turvassa.','sparkle']]),
+  sb1_liikunta:sp1('Liikuntatunti',[['t','hall','Koulun liikuntatunnilla pelataan salibandya.','sball'],['q','hall','Ensin jaetaan joukkueet. Ratkaise:','ma','Joukkuetehtävä:'],['q','hall','Opettajalla on vielä tehtävä:','ai','Opettajan tehtävä:'],
+    ['c','hall','Kumpaan joukkueeseen menet?',[['Keltaiseen','Keltaiset tekevät kolme maalia.'],['Vihreään','Vihreät puolustavat kuin muuri.']]],['e','hall','{end} Opettaja sanoo: "Hienoa reilua peliä!"','hearts']]),
+  sb1_kaveri:sp1('Uusi kaveri',[['t','hall','Treeneihin tulee uusi lapsi. Hän on vähän ujo.'],['q','hall','Ratkaiskaa tehtävä yhdessä:','ma','Yhteinen tehtävä:'],
+    ['c','hall','Mitä teet?',[['Näytän syötön','Kaveri oppii syötön heti.'],['Kysyn nimeä','Kaverin nimi on Aino. Hän hymyilee.']]],['e','hall','{end} Teistä tulee hyvät ystävät.','hearts']]),
+  sb1_kisa:sp1('Pikkuturnaus',[['t','hall','Hallissa on turnaus. Joukkueita on monta.','sball'],['q','hall','Turnaus alkaa tehtävällä:','ma','Turnaustehtävä:'],
+    ['c','hall','Viimeinen peli on tasan. Mitä teet?',[['Lauon kovaa','Pallo menee maaliin. Voitto!'],['Syötän','Kaveri laukoo. Pallo osuu tolppaan, mutta peli oli hieno.']]],['e','hall','{end} Kaikki saavat mitalin.','ribbon']])
+});
+HPOOL[1]={normal:['hk1_luistin','hk1_kiekko','hk1_lumi','hk1_evas'], lucky:['hk1_hanskat','hk1_maskotti']};
+FPOOL[1]={normal:['fb1_pallo','fb1_sade','fb1_kengat','fb1_kirje'], lucky:['fb1_pilli','fb1_vieras']};
+LG.floorball.pool[1]={normal:['sb1_pallo','sb1_maila','sb1_liikunta','sb1_kaveri'], lucky:['sb1_lasit','sb1_kisa']};
+
+
+/* ===== v35: ääneenlukunapit 1.–2. lk ===== */
+function speakAdv(){ if(!S.adv) return; const n=ADV[S.adv.id].nodes[S.adv.node]; if(!n) return; let t=plainTxt(vfill(n.text)).trim(); if(t && !/[.!?:]$/.test(t)) t+='.';
+  if(n.choices) t+=' Valitse: '+n.choices.map(c=>plainTxt(vfill(c.label))).join(', vai ')+'?';
+  else if(n.fork) t+=' Valitse, kumman tehtävän teet ensin.';
+  else if(n.task) t+=' Paina nappia ja ratkaise tehtävä.';
+  else if(n.end) t+=' Seikkailu on valmis!';
+  speakSeq([[t,'fi-FI']]); }
+function readBlock(btn){ const host=btn.closest('.rdhost'); if(!host) return; const c=host.cloneNode(true);
+  c.querySelectorAll('.rdbtn,svg,.visual,.num,.badge,[aria-hidden="true"]').forEach(x=>x.remove());
+  c.querySelectorAll('*').forEach(x=>{ const inl=/^(SPAN|I|EM|STRONG|A)$/.test(x.tagName)&&!x.classList.contains('label')&&!x.classList.contains('pill'); if(!inl&&x.parentNode) x.insertAdjacentText('beforebegin','. '); x.insertAdjacentText('beforeend', inl?' ':'. '); });
+  let t=c.textContent.replace(/·/g,',').replace(/\s+/g,' ').replace(/\s+([.,:!?])/g,'$1').replace(/([.,:!?])(\.)+/g,'$1').replace(/,\./g,'.').replace(/^[.\s]+/,'').trim();
+  speakSeq([[t,'fi-FI']]); }
+function addReadBtns(){ if(!small()) return;
+  const add=el=>{ if(!el || el.classList.contains('rdhost')) return; el.classList.add('rdhost'); el.insertAdjacentHTML('afterbegin',`<button class="rdbtn" data-act="rd" aria-label="Kuuntele">${SPK}</button>`); };
+  document.querySelectorAll('#app .card').forEach(c=>{ if(c.id==='story'||c.querySelector('.chapter')) return; add(c.querySelector(':scope > .txt')||c); });
+  document.querySelectorAll('#app .chapter, #app .carebox').forEach(add); }
+
+/* ===== v36: minipelien ohjeet ja viestit ääneen (1.–2. lk) ===== */
+function mgSpeak(){ const gate=document.querySelector('.mggate');
+  if(gate){ const st=[...gate.querySelectorAll('li')].map(li=>plainTxt(li.innerHTML).trim()).map(t=>/[.!?]$/.test(t)?t:t+'.'); const b=$('#mgstart');
+    speakSeq([['Näin pelaat. '+st.join(' ')+(b?' Aloita painamalla nappia: '+b.textContent+'.':''),'fi-FI']]); return; }
+  const t=$('#mg-text'), c=$('#tcmd'); let txt=t?plainTxt(t.innerHTML).trim():''; if(c&&c.textContent) txt+=(txt&&!/[.!?]$/.test(txt)?'.':'')+' Käsky: '+c.textContent;
+  speakSeq([[txt,'fi-FI']]); }
+function mgVoice(){ if(!small()) return; if(autoRead()) setTimeout(mgSpeak,300);
+  const t=$('#mg-text'), c=$('#tcmd'); if(!('MutationObserver' in window)) return;
+  const say=el=>{ if(!autoRead()||!document.body.contains(el)) return; const x=plainTxt(el.innerHTML||el.textContent).trim(); if(x) speakSeq([[x,'fi-FI']]); };
+  setTimeout(()=>{ if(t) new MutationObserver(()=>say(t)).observe(t,{childList:true,characterData:true,subtree:true});
+    if(c) new MutationObserver(()=>say(c)).observe(c,{childList:true,characterData:true,subtree:true}); },0); }
+
+/* ===== v37: luokkakohtaiset pisteet, kolikot, ostokset ja tarinan eteneminen ===== */
+const GW_KEYS=['points','coins','gear','logos','logoUnlock','chaptersOpen','season','lastHadv','themeState'];
+const gwFresh=()=>({points:0, coins:0, gear:{owned:[], blanket:null, bridle:false, wreath:false, jersey:null, helmet:null}, logos:{}, logoUnlock:{}, chaptersOpen:1,
+  season:{no:1, games:[], final:null, champion:false, lucky:false, advDone:false}, lastHadv:[], themeState:{}});
+function switchGrade(ng){ const og=S.profile.grade; if(og===ng) return;
+  S.gw=S.gw||{}; const cur={}; GW_KEYS.forEach(k=>{ cur[k]=S[k]==null?null:JSON.parse(JSON.stringify(S[k])); }); cur.theme=S.profile.theme; cur.pet=S.profile.pet; S.gw[og]=cur;
+  const nw=gwFresh(), sv=S.gw[ng]||{}; Object.keys(sv).forEach(k=>{ if(sv[k]!=null) nw[k]=sv[k]; }); GW_KEYS.forEach(k=>{ S[k]=nw[k]; }); delete S.gw[ng];
+  const pets=Object.assign({}, ...Object.entries(cur.themeState||{}).map(([t,v])=>({[t]:v&&v.pet}))); Object.entries(pets).forEach(([t,pet])=>{ if(t!==S.profile.theme && pet && !S.themeState[t]) S.themeState[t]={pet, chaptersOpen:1}; });
+  const th=S.profile.theme; if(sv.theme && sv.theme!==th){ S.themeState[sv.theme]=Object.assign({}, S.themeState[sv.theme]||{}, {pet:sv.pet||(S.themeState[sv.theme]||{}).pet, chaptersOpen:S.chaptersOpen, season:S.season, lastHadv:S.lastHadv||[]});
+    const st=S.themeState[th]||{}; S.chaptersOpen=st.chaptersOpen||1; S.season=st.season||gwFresh().season; S.lastHadv=st.lastHadv||[]; }
+  S.profile.grade=ng; S.adv=null; R=null; }
+/* ===== v38: 1. lk helpot sanatehtävät kuvan kanssa (puuttuva kirjain, alkukirjain, kuva ja sana) ===== */
+const PIC12=[['auto','🚗'],['talo','🏠'],['kala','🐟'],['kissa','🐱'],['koira','🐶'],['kuu','🌙'],['puu','🌳'],['omena','🍎'],['maito','🥛'],['leipä','🍞'],['kakku','🍰'],['muna','🥚'],
+ ['pallo','⚽'],['kirja','📖'],['kukka','🌸'],['kenkä','👟'],['vene','⛵'],['hiiri','🐭'],['ankka','🦆'],['karhu','🐻'],['lammas','🐑'],['possu','🐷'],['lehmä','🐮'],['hevonen','🐴'],
+ ['kani','🐰'],['lintu','🐦'],['tähti','⭐'],['aurinko','☀️'],['juusto','🧀'],['banaani','🍌'],['mansikka','🍓'],['porkkana','🥕'],['sammakko','🐸'],['vauva','👶'],['sydän','❤️'],
+ ['jää','🧊'],['kello','⏰'],['sukka','🧦'],['takki','🧥'],['lumi','❄️'],['sade','🌧️'],['juna','🚆'],['bussi','🚌'],['pyörä','🚲'],['avain','🔑'],['lusikka','🥄'],['kynä','✏️'],['ilmapallo','🎈'],
+ ['hammas','🦷'],['nenä','👃'],['korva','👂'],['silmä','👁️'],['käsi','✋'],['jalka','🦶'],['kuningas','🤴'],['lumiukko','⛄'],['peruna','🥔'],['kurkku','🥒'],['tomaatti','🍅'],['muurahainen','🐜'],['etana','🐌'],['siili','🦔']];
+const spaced=w=>up(w).split('').join(' ');
+const picBig=e=>`<span style="font-size:52px; display:block; margin:6px 0 2px">${e}</span>`;
+const PAIR12={a:'ä',ä:'ae',o:'ö',ö:'o',u:'y',y:'u',e:'ä'}; const easyOpts=c=>{ const vow=VOW12.includes(c), pool=((vow?'aeiouäöy':'klmnpstrvhj')).split('').filter(x=>x!==c && !(PAIR12[c]||'').includes(x) && (vow||!'aeiouyäö'.includes(x))); return shuffle([c,...sample(pool.filter(x=>vow?'aeiou'.includes(x)||!'aeiou'.includes(c):true),12)]); };
+function genAi1(lvl){ const maxL=lvl===1?4:lvl===2?5:7, pool=PIC12.filter(([w])=>w.length<=maxL && w.length>=3);
+  const type=pick(lvl===1?['missv','missv','first','first','pic']:lvl===2?['miss','missv','first','pic','last']:['miss','miss','pic','last','first']);
+  const [w,e]=pick(pool);
+  if(type==='missv'||type==='miss'){ let idx=[...w].map((c,i)=>i).filter(i=>type==='missv'?VOW12.includes(w[i]):true); if(!idx.length) idx=[...w].map((c,i)=>i);
+    const i=pick(idx), c=w[i], vow=VOW12.includes(c);
+    let opts=lvl===1?easyOpts(c):vow?[c,...sample(VOW12.split('').filter(x=>x!==c),5)]:letterOpts(c);
+    const words=new Set(PIC12.map(x=>x[0]).concat(W12.map(x=>x.w))); opts=[c,...opts.filter(o=>o!==c&&!words.has(w.slice(0,i)+o+w.slice(i+1)))].slice(0,lvl===1?3:4);
+    return {type:'mc', prompt:`Mikä kirjain puuttuu sanasta?${picBig(e)}<b style="letter-spacing:2px">${spaced(w.slice(0,i)+'_'+w.slice(i+1))}</b>`, speakTxt:`Mikä kirjain puuttuu sanasta ${w}?`, options:shuffle(opts).map(up), answer:up(c), explain:`Sana on ${w}. Puuttuva kirjain on ${up(c)}.`}; }
+  if(type==='first'||type==='last'){ const c=type==='first'?w[0]:w[w.length-1];
+    return {type:'mc', prompt:`${type==='first'?'Millä kirjaimella':'Mihin kirjaimeen'} sana ${type==='first'?'alkaa':'loppuu'}?${picBig(e)}`, speakTxt:`${type==='first'?'Millä kirjaimella':'Mihin kirjaimeen'} sana ${w} ${type==='first'?'alkaa':'loppuu'}?`, options:(lvl===1?shuffle(easyOpts(c).filter(x=>x!==c).slice(0,2).concat(c)):letterOpts(c)).map(up), answer:up(c), explain:`${w} ${type==='first'?'alkaa kirjaimella':'loppuu kirjaimeen'} ${up(c)}.`}; }
+  const wr=sample(PIC12.filter(([x])=>x!==w && x[0]!==w[0] && x.length<=maxL+1),lvl===1?2:3).map(x=>up(x[0]));
+  return {type:'mc', prompt:`Mikä sana sopii kuvaan?${picBig(e)}`, speakTxt:'Mikä sana sopii kuvaan?', options:shuffle([up(w),...wr]), answer:up(w), explain:`Kuvassa on ${w}.`}; }
+Object.assign(GEN,{ai1_kirjain:genAi1}); TOPIC.ai1_kirjain={name:'Kuva ja kirjain'};
+SUBJ[1].find(x=>x.id==='ai').areas.unshift('ai1_kirjain');
+if(!ALLT.includes('ai1_kirjain')) ALLT.push('ai1_kirjain'); S.levels.ai1_kirjain=S.levels.ai1_kirjain||1; S.hist.ai1_kirjain=S.hist.ai1_kirjain||[];
+window.__toast=toast;
 /*BOOT*/bootView();
 })();
 </script>
