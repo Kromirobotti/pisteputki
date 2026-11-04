@@ -289,13 +289,13 @@ ul.steps{margin:0; padding-left:20px} ul.steps li{margin:2px 0}
 </head>
 <body>
 <script>
-window.APP_VERSION='43.3 (4.11.2026)';
+window.APP_VERSION='46.1 (4.11.2026)';
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
 try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
 window.addEventListener('load',()=>{ try{ const k='pisteputki-appver', old=localStorage.getItem(k); localStorage.setItem(k, window.APP_VERSION);
   if(old && old!==window.APP_VERSION) setTimeout(()=>{ if(typeof window.__toast==='function') window.__toast('Peli päivittyi: versio '+window.APP_VERSION); },1200); }catch(e){} });
 </script>
-<script src="pp3d.js?v=43.3"></script>
+<script src="pp3d.js?v=46.1"></script>
 
 <div class="wrap" id="app"></div>
 
@@ -2384,7 +2384,7 @@ function applyCare(care, ok, bonus){ const m=S.meters, add=ok*9+10+(bonus?15:0);
   else if(care==='trick'){ m.joy=Math.min(100,m.joy+Math.round(add*0.7)); m.food=Math.min(100,m.food+Math.round(add*0.3)); }
   else m[care]=Math.min(100,m[care]+add); m.t=Date.now(); save(); chTrack('care'); }
 function careOutcome(care, ok){ const o=pick((isDog()?CARE_OUT_DOG:CARE_OUT)[care]);
-  $('#app').innerHTML=`${header()}<div class="stack" style="margin-top:16px"><div class="card scenecard"><div class="hop">${sceneSVG({bg:o.bg, extras:o.extras})}</div>
+  $('#app').innerHTML=`${header()}<div class="stack" style="margin-top:16px"><div class="card scenecard">${use3d()?slot3d('hub'):`<div class="hop">${sceneSVG({bg:o.bg, extras:o.extras})}</div>`}
     <div class="txt"><h2>${ok}/5 oikein</h2><p class="storytext">${fill(o.t)}</p>
     <div class="meters">${meterBar('food')}${meterBar('clean')}${meterBar('joy')}</div>
     <button class="btn wide" data-act="hub">${tv({horse:'Takaisin talliin',dog:'Takaisin kotiin'})}</button><button class="btn ghost wide" data-act="care" data-v="${care}">Hoida lisää</button></div></div></div>`;
@@ -2451,7 +2451,7 @@ function miniRide(n, done){ const k=Math.max(3,n), G=192, HX=36, HS=.6, speed=15
 function careMini(care, ok){ const fin=()=>{ SFX.fanfare(); applyCare(care, ok, true); careOutcome(care, ok); };
   R={kind:'mini', care, ok, fin};
   if(isDog()){ if(care==='food') dogFeed(ok, fin); else if(care==='clean') dogBrush(ok, fin); else if(care==='trick') dogTrick(ok, fin); else if(care==='joy') dogWalk(ok, fin); else fin(); return; }
-  if(care==='food'){ if(use3d() && ok>0){ R={kind:'mini3d', care, ok, fin}; PP3D.mount(null,{mode:'feed', carrots:ok, pet:S.profile.pet, colors:horseColors(), avatar:avatar3d(), gear:gear3d(), sound:S.sound!==false, say:t=>{ if(autoRead()) speakSeq([[t,'fi-FI']]); }, onDone:()=>fin(), onSkip:()=>fin()}); } else miniFeed(ok, fin); } else if(care==='clean') miniBrush(ok, fin); else if(care==='hoof') miniHoof(ok, fin); else if(care==='joy') miniRide(ok, fin); else fin(); }
+  if(care==='food'){ if(use3d() && ok>0){ R={kind:'mini3d', care, ok, fin}; PP3D.mount(null,{mode:'feed', carrots:ok, pet:S.profile.pet, colors:horseColors(), avatar:avatar3d(), gear:gear3d(), sound:S.sound!==false, say:t=>{ if(autoRead()) speakSeq([[t,'fi-FI']]); }, onDone:()=>fin(), onSkip:()=>fin()}); } else miniFeed(ok, fin); } else if(care==='clean'){ if(use3d()){ R={kind:'mini3d', care, ok, fin}; PP3D.mount(null,{mode:'brush', carrots:Math.max(1,ok), pet:S.profile.pet, colors:horseColors(), avatar:avatar3d(), gear:gear3d(), sound:S.sound!==false, say:t=>{ if(autoRead()) speakSeq([[t,'fi-FI']]); }, onDone:()=>fin(), onSkip:()=>fin()}); } else miniBrush(ok, fin); } else if(care==='hoof'){ if(use3d()){ R={kind:'mini3d', care, ok, fin}; PP3D.mount(null,{mode:'hoof', carrots:Math.max(3,ok), pet:S.profile.pet, colors:horseColors(), avatar:avatar3d(), gear:gear3d(), sound:S.sound!==false, say:t=>{ if(autoRead()) speakSeq([[t,'fi-FI']]); }, onDone:()=>fin(), onSkip:()=>fin()}); } else miniHoof(ok, fin); } else if(care==='joy'){ if(use3d()){ R={kind:'mini3d', care, ok, fin}; PP3D.mount(null,{mode:'ride', carrots:Math.max(3,ok), pet:S.profile.pet, colors:horseColors(), avatar:avatar3d(), gear:gear3d(), sound:S.sound!==false, say:t=>{ if(autoRead()) speakSeq([[t,'fi-FI']]); }, onDone:()=>fin(), onSkip:()=>fin()}); } else miniRide(ok, fin); } else fin(); }
 
 /* ================= v12: koiranpentu-teema ================= */
 const DOG_COATS=[['Kerma','#F3E3C8','#E0C9A4'],['Kulta','#D9A45A','#BF8940'],['Suklaa','#7A4A2E','#633A22'],['Musta','#34302E','#221E1C'],['Harmaa','#B3B3B8','#96969C']];
