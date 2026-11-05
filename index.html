@@ -296,13 +296,13 @@ ul.steps{margin:0; padding-left:20px} ul.steps li{margin:2px 0}
 </head>
 <body>
 <script>
-window.APP_VERSION='57 (5.11.2026)';
+window.APP_VERSION='62.1 (6.11.2026)';
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
 try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
 window.addEventListener('load',()=>{ try{ const k='pisteputki-appver', old=localStorage.getItem(k); localStorage.setItem(k, window.APP_VERSION);
   if(old && old!==window.APP_VERSION) setTimeout(()=>{ if(typeof window.__toast==='function') window.__toast('Peli päivittyi: versio '+window.APP_VERSION); },1200); }catch(e){} });
 </script>
-<script src="pp3d.js?v=57"></script>
+<script src="pp3d.js?v=62.1"></script>
 
 <div class="wrap" id="app"></div>
 
@@ -5288,7 +5288,7 @@ function viewSettings(confirming){ const p=S.profile;
   ${confirming?`<p class="calm">Pelaajan ${esc(p.name)} pisteet, tarina ja osaaminen poistetaan. Muiden pelaajien tiedot säilyvät. Oletko varma?</p><div class="row"><button class="btn" data-act="reset">Kyllä, aloita alusta</button><button class="btn ghost" data-act="settings">Peruuta</button></div>`
   :`<button class="btn ghost wide" data-act="askreset">Aloita alusta (vain ${esc(p.name)})</button>`}
   <button class="btn ghost wide" data-act="sound">Äänet: ${S.sound===false?'pois':'päällä'}</button>
-  ${(window.PP3D&&PP3D.ok&&theme()==='horse')?`<button class="btn ghost wide" data-act="gfx">Grafiikka: ${S.gfx==='2d'?'2D (kevyt)':'3D'}</button>${use3d()?`<button class="btn ghost wide" data-act="sets3d">Katso seikkailujen paikat</button>`:''}`:''}
+  ${(window.PP3D&&PP3D.ok&&theme()==='hockey')?`<button class="btn ghost wide" data-act="rink3d">Kokeile 3D-kaukaloa (esikatselu)</button>`:''}${(window.PP3D&&PP3D.ok&&theme()==='horse')?`<button class="btn ghost wide" data-act="gfx">Grafiikka: ${S.gfx==='2d'?'2D (kevyt)':'3D'}</button>${use3d()?`<button class="btn ghost wide" data-act="sets3d">Katso seikkailujen paikat</button>`:''}`:''}
   <button class="btn ghost wide" data-act="autoread">Lue tehtävät ääneen automaattisesti: ${autoRead()?'päällä':'pois'}</button>
   <p class="small muted">Puheääni tulee laitteen omasta puhesynteesistä. iPhonessa ja iPadissa pehmeämmän äänen voi yleensä ladata Saavutettavuus-asetusten puheasetuksista: Asetukset → Saavutettavuus → näön kohdalta ääneenluvun asetukset (nimi vaihtelee iOS-version ja kielen mukaan) → Äänet → Suomi → valitse ääni, jossa on merkintä parannettu tai premium, ja lataa se Wi-Fi-yhteydellä. Nopein tapa löytää kohta on kirjoittaa Asetusten hakukenttään ”Äänet”. Sulje ja avaa peli latauksen jälkeen.</p>
   <button class="btn alt wide" data-act="hub">Takaisin peliin</button>${window.APP_VERSION?`<p class="small muted center" style="margin-top:8px">Versio ${window.APP_VERSION}</p>`:''}</div></div>`; }
@@ -5464,7 +5464,7 @@ function endMatch(){ SFX.whistle(); if(R.us>R.them) setTimeout(()=>SFX.fanfare()
   <div class="board"><span class="team">${esc(S.profile.pet)}</span><span class="score">${R.us}–${R.them}</span><span class="team r">${esc(R.opp)}</span><span class="per">${R.ot?'Päättyi jatkoajalla':'Lopputulos'}</span></div>
   <div class="card stack center">${win&&R.final?lg().trophy():''}<div class="goalflash">${title}</div><p>${txt}</p>${win?'<p class="small">+30 bonuspistettä voitosta</p>':''}
   <button class="speak" data-act="endspeak" style="align-self:center">${SPK} Kuuntele</button>
-  <button class="btn wide" data-act="hub">Jatka</button></div></div>`;
+  ${hk3d()&&!R.final?(m=>m==='shoot'?`<button class="btn alt wide pulse" data-act="hkshoot" data-v="${Math.max(3,Math.min(6,R.us||3))}">🏒 Bonus: rankkarikisa!</button>`:m==='goalie'?`<button class="btn alt wide pulse" data-act="hkgoalie" data-v="${Math.max(3,Math.min(6,(R.us||3)+1))}">🧤 Bonus: maalivahtikisa!</button>`:`<button class="btn alt wide pulse" data-act="hkzam" data-v="5">🚜 Bonus: jäänhoitokone!</button>`)(hkNextMini()):''}<button class="btn wide" data-act="hub">Jatka</button></div></div>`;
   const t0=plainTxt(title).trim().toLowerCase(), say=`Maaleja ${R.us}, vastustajalla ${R.them}. ${t0.charAt(0).toUpperCase()+t0.slice(1)} ${plainTxt(txt)}${win?' Saat 30 bonuspistettä.':''}`;
   window.__endSay=say; if(autoRead()) setTimeout(()=>speakSeq([[say,'fi-FI']]), win?1900:900); }
 
@@ -5511,6 +5511,13 @@ document.addEventListener('click', e=>{ const b=e.target.closest('[data-act]'); 
   else if(a==='quit'){ const st=R&&R.kind==='story'; R=null; st?viewAdventure():viewHub(); window.scrollTo(0,0); }
   else if(a==='speak'){ speakQ(); }
   else if(a==='sets3d') viewSets3d(v||'meadow');
+  else if(a==='rink3d') viewRink3d(v||'player');
+  else if(a==='hkshoot'){ S.hkMiniN=(S.hkMiniN||0)+1; save(); hkShoot(+v||5); }
+  else if(a==='hkgoalie'){ S.hkMiniN=(S.hkMiniN||0)+1; save(); hkShoot(+v||5, null, 'goalie'); }
+  else if(a==='hkgoalietry') hkShoot(5, ()=>viewRink3d('goalie'), 'goalie');
+  else if(a==='hkzam'){ S.hkMiniN=(S.hkMiniN||0)+1; save(); hkShoot(+v||5, null, 'zamboni'); }
+  else if(a==='hkzamtry') hkShoot(5, ()=>viewRink3d('rink'), 'zamboni');
+  else if(a==='hkshoottry') hkShoot(5, ()=>viewRink3d('player'));
   else if(a==='gfx'){ S.gfx=S.gfx==='2d'?'3d':'2d'; save(); viewSettings(false); }
   else if(a==='autoread'){ S.autoRead=!autoRead(); save(); viewSettings(false); }
   else if(a==='settings'){ viewSettings(false); }
@@ -6192,11 +6199,33 @@ const inShop=()=>!!document.querySelector('#app .shop');
 function gearView(){ const g=Object.assign({}, S.gear||{}); if(SHOP_TRY && inShop()) g[SHOP_TRY.slot]=SHOP_TRY.val; return g; }
 function withTry(fn){ if(!SHOP_TRY) return fn(); const g=S.gear, old=g[SHOP_TRY.slot]; g[SHOP_TRY.slot]=SHOP_TRY.val; try{ return fn(); } finally { g[SHOP_TRY.slot]=old; } }
 function gear3d(){ const g=gearView(); return {blanket:g.blanket||null, wraps:g.wraps||null, bonnet:g.bonnet||null, halter:g.halter||null, bridle:g.bridle||null, wreath:g.wreath||null}; }
-function avatar3d(){ const a=S.avatar||{}, gv=gearView(); return {gear:{helmet:gv.rhelmet||null, vest:gv.rvest||null, boots:gv.rboots||null}, skin:(['#E6AE88','#C98A5E','#7A4A2E'])[a.skin]||'#E6AE88', hair:HAIR[a.hair]||HAIR[1], shirt:SHIRT[a.shirt]||SHIRT[0], style:a.style||'short', gender:a.gender||'girl'}; }
+function avatar3d(){ const a=S.avatar||{}, gv=gearView(); return {gear:{helmet:gv.rhelmet||null, vest:gv.rvest||null, boots:gv.rboots||null}, skin:(['#E6AE88','#C98A5E','#7A4A2E'])[a.skin]||'#E6AE88', hair:HAIR[a.hair]||HAIR[1], shirt:SHIRT[a.shirt]||SHIRT[0], style:a.style||'short', gender:a.gender||'girl', ...(theme()==='hockey'?hockey3d():{})}; }
+/* v58: jääkiekon 3D-pohja (esikatselu) */
+/* v62: minipeli jokaisen ottelun jälkeen. "Sekoitettu pussi": jokainen kolmesta tulee kerran kolmen ottelun aikana satunnaisessa järjestyksessä, eikä sama peli tule kahdesti peräkkäin. */
+function hkNextMini(){ if(R && R.mini) return R.mini; const all=['shoot','goalie','zam']; let bag=(S.hkBag||[]).filter(x=>all.includes(x));
+  if(!bag.length){ bag=shuffle(all.slice()); if(bag[0]===S.hkLast) bag.push(bag.shift()); }
+  const m=bag.shift(); S.hkBag=bag; S.hkLast=m; save(); if(R) R.mini=m; return m; }
+function hk3d(){ return theme()==='hockey' && S.gfx!=='2d' && !!(window.PP3D && PP3D.ok); }
+const zamBand=()=>{ const g=S.profile.grade; return g<=2?'12':g<=4?'34':'56'; };
+function hkShoot(n, back, mode){ R={kind:'mini3d'}; const gk=mode==='goalie', zm=mode==='zamboni'; S.zamBest=S.zamBest||{}; const zb=S.zamBest[zamBand()]; PP3D.mount(null,{mode:zm?'zamboni':gk?'goalie':'shoot', best:zb?zb.t:0, theme:'hockey', shots:n, grade:S.profile.grade, pet:S.profile.pet, avatar:avatar3d(), sound:S.sound!==false, say:t=>{ if(autoRead()) speakSeq([[t,'fi-FI']]); },
+  onDone:(g,info)=>{ const c=g*3; if(zm&&info&&info.time&&(!zb||info.time<zb.t)){ S.zamBest[zamBand()]={t:info.time, d:today()}; } if(c) S.coins+=c; save(); toast(zm?(info&&info.record?`Uusi jäänajoennätys! +${c} kolikkoa`:c?`Jää kiiltää! +${c} kolikkoa`:'Jäänhoito päättyi.'):g?(gk?`Maalivahtikisa: ${g} torjuntaa! +${c} kolikkoa`:`Rankkarikisa: ${g} maalia! +${c} kolikkoa`):(gk?'Maalivahtikisa päättyi.':'Rankkarikisa päättyi.')); (back||viewHub)(); }, onSkip:()=>(back||viewHub)()}); }
+function hockey3d(){ const g=S.gear||{}, L=logoOf('hockey'); const j=g.jersey||SHIRT[(S.avatar||{}).shirt]||'#D7263D';
+  return {sport:'hockey', jersey:j, helmet:g.helmet||'#F4F4F4', logo:(L&&L.printed)?`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${logoInner(L)}</svg>`:null}; }
+const RINK_VIEWS=[['player','Pelaaja',{kidAt:[0.2,1.0,0.5], props:[['puck',-0.6,1.7]], camT:[0.1,0.8,1.0], camD:0.5}],
+  ['goalie','Maalivahti',{kidAt:[11.0,1.4,1.6], npcs:[{who:'goalie',at:[15.4,0.2,-1.1]}], camT:[15.4,0.9,0.1], camD:0.6}],
+  ['shot','Laukaus',{kidAt:[11.6,1.0,1.4], npcs:[{who:'goalie',at:[15.6,0,-1.35]}], props:[['puck',12.3,0.7]], camT:[14.2,1.0,0.2], camD:0.85}],
+  ['rink','Koko kaukalo',{kidAt:[0.2,1.0,0.3], npcs:[{who:'goalie',at:[15.6,0,-1.5708]},{who:'goalie',at:[-15.6,0,1.5708],shirt:'#d7263d'}], camT:[0,1.5,-1], camD:2.2}]];
+function viewRink3d(cur){ const V=RINK_VIEWS.find(v=>v[0]===cur)||RINK_VIEWS[0];
+  $('#app').innerHTML=`${header()}<div class="stack" style="margin-top:16px"><h2>3D-kaukalo (esikatselu)</h2>
+  <div class="card scenecard"><div class="pp3d-slot" data-mode="story" data-set="rink" data-theme="hockey" data-force="1" data-fx="${encodeURIComponent(JSON.stringify(V[2]))}" style="position:relative; height:min(62vw,300px)"></div></div>
+  <div class="topics">${RINK_VIEWS.map(([k,n])=>`<button class="chip" data-act="rink3d" data-v="${k}" aria-pressed="${k===V[0]}">${n}</button>`).join('')}</div>
+  <button class="btn alt wide" data-act="hkshoottry">🏒 Kokeile laukausminipeliä</button><button class="btn alt wide" data-act="hkgoalietry">🧤 Kokeile maalivahtiminipeliä</button><button class="btn alt wide" data-act="hkzamtry">🚜 Kokeile jäänhoitokonetta</button>
+  <p class="small muted">Pelipaidan väri, kypärä ja logo tulevat kaupasta ja logostudiosta. Minipeli tulee jokaisen voitetun ottelun jälkeen, ja laukaus, maalivahti ja jäänhoitokone vuorottelevat.</p>
+  <button class="btn ghost wide" data-act="settings">Takaisin</button></div>`; }
 function horseColors(){ const H=S.horse||{coat:0,mane:0}, co=COATS[H.coat]||COATS[0], m=(MANES[H.mane]||MANES[0])[1]; return {main:co[1], dark:co[2], light:mixHex(co[1],'#ffffff',.14), hair:m}; }
 (function(){ const app=document.getElementById('app'); if(!app || !window.MutationObserver) return;
   new MutationObserver(()=>{ const el=app.querySelector('.pp3d-slot'); if(!el || el.dataset.on) return; el.dataset.on='1';
-    if(!use3d()) return; try{ PP3D.mount(el,{mode:el.dataset.mode, set:el.dataset.set, fx:el.dataset.fx?JSON.parse(decodeURIComponent(el.dataset.fx)):null, taps:el.dataset.taps?JSON.parse(decodeURIComponent(el.dataset.taps)):null, onTap:i=>{ const b=document.querySelector(`[data-act=advchoice][data-i="${i}"]`); if(b) b.click(); }, pet:S.profile&&S.profile.pet, colors:horseColors(), avatar:avatar3d(), gear:gear3d(), sound:S.sound!==false, meters:S.meters }); if(PP3D.setClock){ const u=(typeof R!=='undefined' && R && R.q && R.q.type==='hands' && R.ui)?R.ui:{ha:240,ma:0}; PP3D.setClock(u.ma,u.ha); } }catch(e){ console.error(e); } }).observe(app,{childList:true}); })();
+    if(!use3d() && !el.dataset.force) return; try{ PP3D.mount(el,{theme:el.dataset.theme||'horse', mode:el.dataset.mode, set:el.dataset.set, fx:el.dataset.fx?JSON.parse(decodeURIComponent(el.dataset.fx)):null, taps:el.dataset.taps?JSON.parse(decodeURIComponent(el.dataset.taps)):null, onTap:i=>{ const b=document.querySelector(`[data-act=advchoice][data-i="${i}"]`); if(b) b.click(); }, pet:S.profile&&S.profile.pet, colors:horseColors(), avatar:avatar3d(), gear:gear3d(), sound:S.sound!==false, meters:S.meters }); if(PP3D.setClock){ const u=(typeof R!=='undefined' && R && R.q && R.q.type==='hands' && R.ui)?R.ui:{ha:240,ma:0}; PP3D.setClock(u.ma,u.ha); } }catch(e){ console.error(e); } }).observe(app,{childList:true}); })();
 window.__toast=toast;
 /*BOOT*/bootView();
 })();
