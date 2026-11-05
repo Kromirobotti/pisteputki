@@ -40,6 +40,7 @@ body.t-dog{ --bg:#FFF1EA; --ink:#2A1E22; --muted:#7D6468; --card:#FFFCFA; --line
 .namesign{position:absolute; right:3%; bottom:7%; transform:rotate(-3deg); background:linear-gradient(#b8854f,#8f6232); border:3px solid #6b4520; border-radius:10px; padding:6px 16px; box-shadow:0 4px 10px rgba(0,0,0,.3); min-width:70px; text-align:center}
 .namesign::before,.namesign::after{content:''; position:absolute; top:100%; width:6px; height:22px; background:#6b4520}.namesign::before{left:16px}.namesign::after{right:16px}
 .namesign b{font-size:18px; color:#fff8e8; text-shadow:0 2px 0 rgba(0,0,0,.35); letter-spacing:.3px; white-space:nowrap}.namesign b:empty::before{content:'?'; opacity:.6}
+.sceneq .pp3d-slot{height:min(48vw,230px)!important; border-radius:16px; overflow:hidden}
 .tcard .tart{display:block; width:100%; height:auto; aspect-ratio:5/3; border-radius:10px}
 .tcard .tname{font-weight:800; font-size:16px; line-height:1.15; margin-top:2px}
 .tcard[aria-pressed="true"]{border-color:var(--accent2); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent2) 25%, transparent)}
@@ -295,13 +296,13 @@ ul.steps{margin:0; padding-left:20px} ul.steps li{margin:2px 0}
 </head>
 <body>
 <script>
-window.APP_VERSION='47.2 (5.11.2026)';
+window.APP_VERSION='53.1 (5.11.2026)';
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
 try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
 window.addEventListener('load',()=>{ try{ const k='pisteputki-appver', old=localStorage.getItem(k); localStorage.setItem(k, window.APP_VERSION);
   if(old && old!==window.APP_VERSION) setTimeout(()=>{ if(typeof window.__toast==='function') window.__toast('Peli päivittyi: versio '+window.APP_VERSION); },1200); }catch(e){} });
 </script>
-<script src="pp3d.js?v=47.2"></script>
+<script src="pp3d.js?v=53.1"></script>
 
 <div class="wrap" id="app"></div>
 
@@ -2012,51 +2013,51 @@ function sceneSVG(n){ const foot=isFootball(), sb=isFloorball(), hockey=!foot&&!
 /* ================= v3: adventures ================= */
 const ADV={
   tulokas:{title:'Uusi tulokas', reward:20, start:'a1', nodes:{
-    a1:{bg:'meadow', text:'Kuljetusauto pysähtyy tallin pihaan. Ramppi laskeutuu, ja ulos astelee {pet} kuin kuningas, joka on tullut tarkastamaan valtakuntaansa.', next:'a2'},
-    a2:{bg:'stable', text:'{pet} haistelee {nameGen} pipoa pitkään. Sitten tulee päätös: tästä tulee paras ystävä. Pipo tosin näyttää aika herkulliselta. Mitä teet?',
-      choices:[{label:'Annan pipon', set:{pipo:'{pet} syö pipon tupsun ja näyttää tyytyväiseltä. Tupsuton pipo on nyt virallisesti tallin muotia.'}, next:'a3'},
-               {label:'Piilotan pipon', set:{pipo:'Piilotat pipon selkäsi taakse. {pet} kiertää ympärisi kolme kertaa ja löytää sen silti. Salapoliisihevonen!'}, next:'a3'}]},
-    a3:{bg:'night', extras:['moon'], text:'{pipo} Ilta laskeutuu, ja {pet} nukahtaa ensimmäistä kertaa uudessa kodissaan. Huomenna alkavat seikkailut.', end:true}}},
+    a1:{bg:'meadow', fx:{act:'arrive', props:['truck'], cam:'wide', kidAt:[-0.8,1.4,-2.3]}, text:'Kuljetusauto pysähtyy tallin pihaan. Ramppi laskeutuu, ja ulos astelee {pet} kuin kuningas, joka on tullut tarkastamaan valtakuntaansa.', next:'a2'},
+    a2:{bg:'stable', fx:{act:'sniff', kid:{beanie:'#D7263D'}, kidAt:'head', cam:'close'}, text:'{pet} haistelee {nameGen} pipoa pitkään. Sitten tulee päätös: tästä tulee paras ystävä. Pipo tosin näyttää aika herkulliselta. Mitä teet?',
+      choices:[{label:'Annan pipon', fx:{act:'sleep', kidOff:true, cam:'horseUp', headTop:'capTop'}, set:{pipo:'{pet} syö pipon tupsun ja näyttää tyytyväiseltä. Tupsuton pipo on nyt virallisesti tallin muotia.'}, next:'a3'},
+               {label:'Piilotan pipon', fx:{act:'sleep', kidOff:true, cam:'horse', mouth:'beanieMouth'}, set:{pipo:'Piilotat pipon selkäsi taakse. {pet} kiertää ympärisi kolme kertaa ja löytää sen silti. Salapoliisihevonen!'}, next:'a3'}]},
+    a3:{bg:'night', extras:['moon'], fx:{act:'sleep', kidOff:true, cam:'horse'}, text:'{pipo} Ilta laskeutuu, ja {pet} nukahtaa ensimmäistä kertaa uudessa kodissaan. Huomenna alkavat seikkailut.', end:true}}},
   metsa:{title:'Metsäretki', reward:40, start:'m1', nodes:{
-    m1:{bg:'stable', text:'Aamu tallilla. {name} avaa oven, ja {pet} tervehtii iloisella hirnahduksella. Suusta roikkuu puolikas ovikyltti. Ilme sanoo: "Se oli jo valmiiksi rikki."', next:'m2'},
-    m2:{bg:'stable', extras:['wallclock'], text:'Tallimestari huikkaa: "Laitumen portti aukeaa ajastimella kello 10.30. Laita ajastin oikeaan aikaan, tai portti pysyy kiinni koko päivän!"',
+    m1:{bg:'stable', fx:{act:'greet', mouth:'doorSign', kidAt:'head', cam:'close'}, text:'Aamu tallilla. {name} avaa oven, ja {pet} tervehtii iloisella hirnahduksella. Suusta roikkuu puolikas ovikyltti. Ilme sanoo: "Se oli jo valmiiksi rikki."', next:'m2'},
+    m2:{bg:'stable', extras:['wallclock'], fx:{props:['clock'], cam:'clock'}, text:'Tallimestari huikkaa: "Laitumen portti aukeaa ajastimella kello 10.30. Laita ajastin oikeaan aikaan, tai portti pysyy kiinni koko päivän!"',
       task:{h:10, m:30, say:'Siirrä ajastimen viisarit kohtaan <b>10.30</b>.', other:'Ajastin käynnistyy, kun ratkaiset tehtävän:'}, next:'m3'},
-    m3:{bg:'meadow', text:'Portti aukeaa narahtaen. {pet} ravaa laitumelle kuin kilpahevonen, pysähtyy kukan kohdalle ja syö sen. Hups. Mihin lähdetään?',
+    m3:{bg:'meadow', fx:{props:['gate','flower'], path:{pts:[[-5.2,-3.0],'home'], gait:'Trot', end:'Eating', face:'home', onEnd:1}}, text:'Portti aukeaa narahtaen. {pet} ravaa laitumelle kuin kilpahevonen, pysähtyy kukan kohdalle ja syö sen. Hups. Mihin lähdetään?',
       choices:[{label:'Metsäpolulle', next:'m4a'},{label:'Rannalle', next:'m4b'}]},
-    m4a:{bg:'forest', extras:['butterfly'], text:'Metsäpolulla {pet} jähmettyy. Ilmassa lepattaa... perhonen. {pet} yrittää piiloutua {nameGen} taakse, mikä ei onnistu, koska hevonen on paljon isompi.',
+    m4a:{bg:'forest', extras:['butterfly'], fx:{act:'scared', props:['butterfly'], kidAt:'head', cam:'close'}, text:'Metsäpolulla {pet} jähmettyy. Ilmassa lepattaa... perhonen. {pet} yrittää piiloutua {nameGen} taakse, mikä ei onnistu, koska hevonen on paljon isompi.',
       task:{other:'Rauhoita {pet} ratkaisemalla tehtävä, niin perhonen lentää pois:'}, next:'m5a'},
-    m5a:{bg:'forest', text:'Perhonen lentää pois. {pet} hirnahtaa voitonriemuisesti, kuin olisi itse karkottanut sen. Sankari! Polun varrella on kyltti: "Aarre on tallin heinäpaalin takana."', next:'m6'},
-    m4b:{bg:'beach', extras:['bottle'], text:'Rannalla {pet} kahlaa veteen ja nostaa suullaan pullon. Pullossa on viesti, joka on kirjoitettu arvoituksena!',
+    m5a:{bg:'forest', fx:{act:'greet', props:['butterflyAway','signpost']}, text:'Perhonen lentää pois. {pet} hirnahtaa voitonriemuisesti, kuin olisi itse karkottanut sen. Sankari! Polun varrella on kyltti: "Aarre on tallin heinäpaalin takana."', next:'m6'},
+    m4b:{bg:'beach', extras:['bottle'], fx:{path:{pts:[[-1.4,-6.4],'home'], r0:3.4, delay:4, pre:'Eating', gait:'Walk', face:'home', end:'Idle_2'}, mouth:'bottle', mouthAt:2.5}, text:'Rannalla {pet} kahlaa veteen ja nostaa suullaan pullon. Pullossa on viesti, joka on kirjoitettu arvoituksena!',
       task:{other:'Avaa viesti ratkaisemalla arvoitus:'}, next:'m5b'},
-    m5b:{bg:'beach', text:'Viestissä lukee: "Aarre on tallin heinäpaalin takana." {pet} kiiruhtaa takaisin niin lujaa, että {name} joutuu juoksemaan perässä.', next:'m6'},
-    m6:{bg:'stable', extras:['treasure'], kx:110, hx:190, text:'Heinäpaalin päältä löytyy arkku! Sen sisällä on vanha porkkanapussi ja kolme pipoa. Tallimestari nauraa: "Nuo ovat kadonneet vuosien varrella!" Kumman herkun {pet} saa palkinnoksi?',
-      choices:[{label:'Porkkanan', set:{treat:'porkkanan'}, next:'m7'},{label:'Omenan', set:{treat:'omenan'}, next:'m7'}]},
-    m7:{bg:'night', extras:['moon'], text:'{pet} syö {treat} kolmella haukulla ja nukahtaa seisaaltaan. Kuorsaus kuuluu naapuritalliin asti. Hyvää yötä, sankarit!', end:true}}},
+    m5b:{bg:'beach', fx:{path:{pts:[[-16,-4],[16,-4]], gait:'Gallop', loop:true}, kidRun:{pts:[[-16,-2.2],[16,-2.2]], delay:1.2, speed:5, loop:true}}, text:'Viestissä lukee: "Aarre on tallin heinäpaalin takana." {pet} kiiruhtaa takaisin niin lujaa, että {name} joutuu juoksemaan perässä.', next:'m6'},
+    m6:{bg:'stable', extras:['treasure'], kx:110, hx:190, fx:{act:'sniff', props:[['chest',-2.7,-0.1,0.3]]}, text:'Heinäpaalin päältä löytyy arkku! Sen sisällä on vanha porkkanapussi ja kolme pipoa. Tallimestari nauraa: "Nuo ovat kadonneet vuosien varrella!" Kumman herkun {pet} saa palkinnoksi?',
+      choices:[{label:'Porkkanan', fx:{act:'sleep', kidOff:true, cam:'horse', props:[['carrotTop','head',0.35]]}, set:{treat:'porkkanan'}, next:'m7'},{label:'Omenan', fx:{act:'sleep', kidOff:true, cam:'horse', props:[['appleCore','head',0.35]]}, set:{treat:'omenan'}, next:'m7'}]},
+    m7:{bg:'night', extras:['moon'], fx:{act:'sleep', kidOff:true, cam:'horse'}, text:'{pet} syö {treat} kolmella haukulla ja nukahtaa seisaaltaan. Kuorsaus kuuluu naapuritalliin asti. Hyvää yötä, sankarit!', end:true}}},
   salaisuus:{title:'Tallin salaisuus', reward:50, start:'s1', nodes:{
-    s1:{bg:'night', extras:['moon','torch'], text:'Yöllä tallista kuuluu rapinaa. {name} hiipii taskulamppu kädessä katsomaan. Kummitus? Varas? Vai jotain vielä pelottavampaa, kuten hiiri?', next:'s2'},
-    s2:{bg:'night', extras:['barrel'], text:'Kauratynnyrin kansi on auki ja kaura on puoliksi syöty! Jäljet johtavat kahteen suuntaan: heinävarastoon ja satulahuoneeseen.',
+    s1:{bg:'night', extras:['moon','torch'], set3d:'stablenight', fx:{kidRun:{pts:[[4.5,2.6],[2.0,1.7]], anim:'Walk', speed:1.2, face:-1.7}, torch:[-1.2,1.8,0.6]}, text:'Yöllä tallista kuuluu rapinaa. {name} hiipii taskulamppu kädessä katsomaan. Kummitus? Varas? Vai jotain vielä pelottavampaa, kuten hiiri?', next:'s2'},
+    s2:{bg:'night', extras:['barrel'], set3d:'stablenight', fx:{props:['barrel','prints'], kidAt:[-0.4,0.6,-2.0], torch:[-2.9,0.5,-1.6], cam:'barrel'}, text:'Kauratynnyrin kansi on auki ja kaura on puoliksi syöty! Jäljet johtavat kahteen suuntaan: heinävarastoon ja satulahuoneeseen.',
       fork:[{label:'Heinävarasto', subj:'ma', text:'Heinävarastossa on lukittu arkku. Lukon koodi on tämän tehtävän vastaus:'},{label:'Satulahuone', subj:'ai', text:'Satulahuoneen ovessa on arvoituslappu. Ratkaise se:'}], next:'s3'},
-    s3:{bg:'night', extras:['barrel'], text:'Kummastakin paikasta löytyy kauranjyviä ja ruskeita karvoja. Syyllinen alkaa olla selvä! Miten saat hänet kiinni?',
-      choices:[{label:'Viritän ansan', set:{trap:'Viritit tynnyrin kanteen kellon, joka kilahtaa, jos kantta liikutetaan.'}, next:'s4'},{label:'Jään vahtiin', set:{trap:'Istuit heinäpaalin päällä vahdissa ja nukahdit kymmenessä minuutissa.'}, next:'s4'}]},
-    s4:{bg:'night', extras:['barrel','moon'], text:'{trap} Keskiyöllä kuuluu KILAH! Paikalle on hiipinyt {pet}, turpa täynnä kauraa. Ilme sanoo: "Tämä ei ole sitä miltä näyttää."', task:{subj:'yo', other:'Jotta {pet} lupaa olla kiltisti, ratkaise vielä yksi tehtävä:'}, next:'s5'},
-    s5:{bg:'stable', text:'{pet} lupaa lopettaa kaurahuijaukset. Lupaus kestää noin kaksi tuntia. Tallimestari laittaa tynnyriin lukon, jonka koodi on vain sinulla. Mysteeri ratkaistu!', end:true}}},
+    s3:{bg:'night', extras:['barrel'], set3d:'stablenight', fx:{props:['barrel','prints'], kidAt:[0.2,1.2,-2.2], torch:[-2.9,0.8,-1.6], cam:'barrelW'}, text:'Kummastakin paikasta löytyy kauranjyviä ja ruskeita karvoja. Syyllinen alkaa olla selvä! Miten saat hänet kiinni?',
+      choices:[{label:'Viritän ansan', set:{trap:'Viritit tynnyrin kanteen kellon, joka kilahtaa, jos kantta liikutetaan.'}, next:'s4'},{label:'Jään vahtiin', fx:{props:['barrel',['bale',-0.1,1.3,0.3]], path:{pts:[[-1.15,-0.75],[-1.15,-0.75]], r0:-2.2, delay:2.5, pre:'Eating', end:'Idle_2'}, mouth:'oatMouth', mouthAt:2.4, kidSit:[-0.1,1.3,-1.0,0.7], bubbleKid:'Zzz', cam:'barrelW'}, set:{trap:'Istuit heinäpaalin päällä vahdissa ja nukahdit kymmenessä minuutissa.'}, next:'s4'}]},
+    s4:{bg:'night', extras:['barrel','moon'], set3d:'stablenight', fx:{props:['barrelBell'], path:{pts:[[-1.15,-0.75],[-1.15,-0.75]], r0:-2.2, delay:2.5, pre:'Eating', end:'Idle_2'}, mouth:'oatMouth', mouthAt:2.4, kidAt:[0.6,0.9,-2.3], torch:[-2.4,1.4,-1.5], cam:'barrelW'}, text:'{trap} Keskiyöllä kuuluu KILAH! Paikalle on hiipinyt {pet}, turpa täynnä kauraa. Ilme sanoo: "Tämä ei ole sitä miltä näyttää."', task:{subj:'yo', other:'Jotta {pet} lupaa olla kiltisti, ratkaise vielä yksi tehtävä:'}, next:'s5'},
+    s5:{bg:'stable', fx:{act:'greet', props:['barrelLocked'], kidAnim:'Victory'}, text:'{pet} lupaa lopettaa kaurahuijaukset. Lupaus kestää noin kaksi tuntia. Tallimestari laittaa tynnyriin lukon, jonka koodi on vain sinulla. Mysteeri ratkaistu!', end:true}}},
   ponikisat:{title:'Ponikisat', reward:50, start:'p1', nodes:{
-    p1:{bg:'stable', extras:['wallclock'], text:'Kisapäivä! {pet} pitää letittää, harjata ja kiillottaa. {pet} ihailee itseään vesiämpärin pinnasta jo valmiiksi. Kuljetus lähtee kello 9.15!',
+    p1:{bg:'stable', extras:['wallclock'], fx:{act:'sniff', props:['clock',['waterBucket','head',0.55]]}, text:'Kisapäivä! {pet} pitää letittää, harjata ja kiillottaa. {pet} ihailee itseään vesiämpärin pinnasta jo valmiiksi. Kuljetus lähtee kello 9.15!',
       task:{subj:'ma', h:9, m:15, say:'Siirrä viisarit lähtöaikaan <b>9.15</b>.', other:'Valmistaudu kisoihin ratkaisemalla tehtävä:'}, next:'p2'},
-    p2:{bg:'arena', text:'Kilpailupaikalla on kaksi lajia: esterata ja kouluratsastus. Molemmat pitää suorittaa, mutta saat valita järjestyksen.',
+    p2:{bg:'arena', fx:{ride:true, path:{pts:[[-5,1.5],[3,1.5],[5.5,-1],[3,-3],[-4,-2.5],[-6,-0.5],[-5,1.5]], gait:'Trot', loop:true}, cam:'arenaW'}, text:'Kilpailupaikalla on kaksi lajia: esterata ja kouluratsastus. Molemmat pitää suorittaa, mutta saat valita järjestyksen.',
       fork:[{label:'Esterata', subj:'ai', text:'Esteen kohdalla on tehtävä. Oikea vastaus on puhdas hyppy:'},{label:'Kouluratsastus', subj:'en', text:'Tuomari haluaa nähdä tarkkuutta. Ratkaise tehtävä tarkasti:'}], next:'p3'},
-    p3:{bg:'arena', extras:['pot'], text:'Viimeisellä suoralla on kukkaruukku, jota ei ollut tarkoitus hypätä. {pet} ja kukkaruukku tuijottavat toisiaan. Mitä teet?',
-      choices:[{label:'Hypätään!', set:{jump:'{pet} lentää kukkaruukun yli kuin lohikäärme. Yleisö villiintyy.'}, next:'p4'},{label:'Kierretään', set:{jump:'Kierrätte ruukun kohteliaasti. {pet} haistelee kukat ja syö yhden.'}, next:'p4'}]},
-    p4:{bg:'arena', extras:['ribbon'], text:'{jump} Tuomarit neuvottelevat pitkään ja antavat erikoispalkinnon: päivän persoonallisin ratsukko!', end:true}}},
+    p3:{bg:'arena', extras:['pot'], fx:{ride:true, props:[['flowerPot','head',0.8]], cam:'horse'}, text:'Viimeisellä suoralla on kukkaruukku, jota ei ollut tarkoitus hypätä. {pet} ja kukkaruukku tuijottavat toisiaan. Mitä teet?',
+      choices:[{label:'Hypätään!', fx:{ride:true, props:[['flowerPot',0.2,-1.3]], path:{pts:[[8.5,-3.9],[-8.5,1.3]], gait:'Gallop', loop:true, jump:{at:[0.2,-1.3]}}, cheek:'rosette', cam:'arenaW'}, set:{jump:'{pet} lentää kukkaruukun yli kuin lohikäärme. Yleisö villiintyy.'}, next:'p4'},{label:'Kierretään', fx:{ride:true, act:'eat', props:[['flowerPot','head',0.8]], cheek:'rosette', cam:'horse'}, set:{jump:'Kierrätte ruukun kohteliaasti. {pet} haistelee kukat ja syö yhden.'}, next:'p4'}]},
+    p4:{bg:'arena', extras:['ribbon'], fx:{act:'greet', cheek:'rosette', kidAnim:'Victory'}, text:'{jump} Tuomarit neuvottelevat pitkään ja antavat erikoispalkinnon: päivän persoonallisin ratsukko!', end:true}}},
   talvikisat:{title:'Talvikisat', reward:60, start:'w1', nodes:{
-    w1:{bg:'stable', extras:['letter'], text:'Postissa tuli kirje: {pet} on kutsuttu Talvikisoihin! {pet} ehtii syödä kirjeestä puolet. Jäljelle jäivät vain lähtöaika 7.45 ja pari numeroa.',
+    w1:{bg:'stable', extras:['letter'], fx:{mouth:'letterHalf', props:['clock'], act:'greet', cam:'close', kidAt:'head'}, text:'Postissa tuli kirje: {pet} on kutsuttu Talvikisoihin! {pet} ehtii syödä kirjeestä puolet. Jäljelle jäivät vain lähtöaika 7.45 ja pari numeroa.',
       task:{subj:'ma', h:7, m:45, say:'Kirjeessä lukee lähtöaika <b>7.45</b>. Siirrä viisarit oikeaan kohtaan.', other:'Selvitä kirjeen syöty kohta ratkaisemalla tehtävä:'}, next:'w2'},
-    w2:{bg:'snow', text:'Talvikisat pidetään jäätyneellä järvellä. Ennen kisaa pitää hoitaa kaksi asiaa: talvikengät kavioihin ja lämmin loimi päälle.',
+    w2:{bg:'snow', set3d:'icelake', fx:{gear:{blanket:'#2D6CDF'}, act:'greet'}, text:'Talvikisat pidetään jäätyneellä järvellä. Ennen kisaa pitää hoitaa kaksi asiaa: talvikengät kavioihin ja lämmin loimi päälle.',
       fork:[{label:'Talvikengät', subj:'en', text:'Kengittäjä laskee kenkien nastoja. Auta häntä:'},{label:'Lämmin loimi', subj:'yo', text:'Loimen koko pitää laskea oikein:'}], next:'w3'},
-    w3:{bg:'snow', text:'Lähtöviivalla on hevosia kolmesta maasta ja yksi poni, joka on puettu joulupukiksi. Millä taktiikalla ajetaan?',
-      choices:[{label:'Täysillä alusta', set:{race:'{pet} ampaisee johtoon ja pitää sen, vaikka nauraa joulupukkiponille koko matkan.'}, next:'w4'},{label:'Säästellen loppuun', set:{race:'{pet} odottaa ja ohittaa kaikki viimeisellä suoralla. Joulupukkiponi vilkuttaa perään.'}, next:'w4'}]},
-    w4:{bg:'snow', text:'Maalisuora häämöttää! Nyt tarvitaan viimeinen voimanponnistus.', task:{other:'Maalisuoralla! Viimeinen tehtävä ratkaisee:'}, next:'w5'},
-    w5:{bg:'snow', extras:['ribbon'], text:'{race} {pet} voittaa Talvikisat! Palkinnoksi tulee kultainen ruusuke ja vuoden porkkanat. {pet} yrittää heti syödä ruusukkeen.', end:true}}},
+    w3:{bg:'snow', set3d:'icelake', fx:{"ride": true, "path": {"pts": [[1.8, -1.2], [1.8, -1.2]], "r0": -0.95, "end": "Idle"}, "racers": [{"c": "#2E2825", "mane": "#15110F", "at": [3.5, -3.2, -0.95]}, {"c": "#DAD6CF", "mane": "#F1EADB", "at": [5.0, -5.0, -0.95]}, {"c": "#D9B26A", "mane": "#F1EADB", "scale": 0.62, "santa": true, "at": [0.2, 1.0, -0.95]}], "cam": "line"}, text:'Lähtöviivalla on hevosia kolmesta maasta ja yksi poni, joka on puettu joulupukiksi. Millä taktiikalla ajetaan?',
+      choices:[{label:'Täysillä alusta', fx:{"ride": true, "set3d": "icelake", "path": {"pts": [[16, -1.2], [-16, -1.2]], "gait": "Gallop", "loop": true}, "racers": [{"c": "#2E2825", "mane": "#15110F", "anim": "Gallop", "race": {"from": [16, 0], "to": [-16, 0], "loop": true, "period": 4.77}, "lane": -3.0, "speed": 6.4, "lag": 1}, {"c": "#DAD6CF", "mane": "#F1EADB", "anim": "Gallop", "race": {"from": [16, 0], "to": [-16, 0], "loop": true, "period": 4.77}, "lane": -4.7, "speed": 6.6, "lag": 2}, {"c": "#D9B26A", "mane": "#F1EADB", "anim": "Gallop", "race": {"from": [16, 0], "to": [-16, 0], "loop": true, "period": 4.77}, "lane": 1.0, "speed": 5.8, "lag": 3, "scale": 0.62, "santa": true}], "follow": [0, 0], "cam": "race"}, set:{race:'{pet} ampaisee johtoon ja pitää sen, vaikka nauraa joulupukkiponille koko matkan.'}, next:'w4'},{label:'Säästellen loppuun', fx:{"ride": true, "set3d": "icelake", "path": {"pts": [[16, -1.2], [-16, -1.2]], "gait": "Gallop", "loop": true}, "racers": [{"c": "#2E2825", "mane": "#15110F", "anim": "Gallop", "race": {"from": [16, 0], "to": [-16, 0], "loop": true, "period": 4.77}, "lane": -3.0, "speed": 5.6, "lag": -6}, {"c": "#DAD6CF", "mane": "#F1EADB", "anim": "Gallop", "race": {"from": [16, 0], "to": [-16, 0], "loop": true, "period": 4.77}, "lane": -4.7, "speed": 5.7, "lag": -5}, {"c": "#D9B26A", "mane": "#F1EADB", "anim": "Gallop", "race": {"from": [16, 0], "to": [-16, 0], "loop": true, "period": 4.77}, "lane": 1.0, "speed": 5.4, "lag": -4, "scale": 0.62, "santa": true}], "follow": [0, 0], "cam": "race"}, set:{race:'{pet} odottaa ja ohittaa kaikki viimeisellä suoralla. Joulupukkiponi vilkuttaa perään.'}, next:'w4'}]},
+    w4:{bg:'snow', set3d:'icelake', fx:{"ride": true, "set3d": "icelake", "path": {"pts": [[16, -1.2], [-16, -1.2]], "gait": "Gallop", "loop": true}, "racers": [{"c": "#2E2825", "mane": "#15110F", "anim": "Gallop", "race": {"from": [16, 0], "to": [-16, 0], "loop": true, "period": 4.77}, "lane": -3.0, "speed": 6.4, "lag": 1}, {"c": "#DAD6CF", "mane": "#F1EADB", "anim": "Gallop", "race": {"from": [16, 0], "to": [-16, 0], "loop": true, "period": 4.77}, "lane": -4.7, "speed": 6.6, "lag": 2}, {"c": "#D9B26A", "mane": "#F1EADB", "anim": "Gallop", "race": {"from": [16, 0], "to": [-16, 0], "loop": true, "period": 4.77}, "lane": 1.0, "speed": 5.8, "lag": 3, "scale": 0.62, "santa": true}], "follow": [0, 0], "cam": "race"}, text:'Maalisuora häämöttää! Nyt tarvitaan viimeinen voimanponnistus.', task:{other:'Maalisuoralla! Viimeinen tehtävä ratkaisee:'}, next:'w5'},
+    w5:{bg:'snow', extras:['ribbon'], set3d:'icelake', fx:{"act": "greet", "cheek": "rosetteGold", "kidAnim": "Victory", "props": [["carrotPile", -1.5, 1.6, 0.3]], "racers": [{"c": "#2E2825", "mane": "#15110F", "at": [3.5, -3.2, -2.2]}, {"c": "#D9B26A", "scale": 0.62, "santa": true, "at": [-3.4, -2.6, -0.5]}]}, text:'{race} {pet} voittaa Talvikisat! Palkinnoksi tulee kultainen ruusuke ja vuoden porkkanat. {pet} yrittää heti syödä ruusukkeen.', end:true}}},
   maila:{title:'Kadonnut onnenmaila', reward:40, start:'h1', nodes:{
     h1:{bg:'locker', text:'Pukukopissa on hätä. Joukkueen onnenmaila on kadonnut! Ilman sitä kukaan ei uskalla laukoa, ja maalivahti on jo syönyt hermostuneena kolme banaania. Kapteeni {name}, ratkaise mysteeri!', next:'h2'},
     h2:{bg:'locker', text:'Mistä aloitetaan etsintä?', choices:[{label:'Pukukopin kaapeista', next:'h3a'},{label:'Jäältä', next:'h3b'}]},
@@ -2289,7 +2290,7 @@ function viewAdventure(){ setTheme(); const A=ADV[S.adv.id], n=A.nodes[S.adv.nod
   else if(n.end) actions=`<button class="btn wide" data-act="advend">Seikkailu suoritettu!</button>`;
   else actions=`<button class="btn wide" data-act="advnext">Jatka</button>`;
   $('#app').innerHTML=`${header()}<div class="stack" style="margin-top:16px"><div class="qhead"><h3>${esc(A.title)}</h3><button class="speak" data-act="advspeak">${SPK} Kuuntele</button></div>
-  <div class="card scenecard">${sceneSVG(n)}<div class="txt"><p class="storytext">${vfill(n.text)}</p>${S.adv.failed?'<p class="calm">Melkein! Kokeillaan toista tehtävää.</p>':''}${actions}</div></div>
+  <div class="card scenecard">${use3d()?slot3d('story','',n.set3d||set3d(n.bg),(S.adv.cfx&&S.adv.cfx.node===S.adv.node)?S.adv.cfx.fx:n.fx):sceneSVG(n)}<div class="txt"><p class="storytext">${vfill(n.text)}</p>${S.adv.failed?'<p class="calm">Melkein! Kokeillaan toista tehtävää.</p>':''}${actions}</div></div>
   <button class="btn ghost" data-act="advquit">Keskeytä seikkailu</button></div>`;
   if(autoRead()) setTimeout(speakAdv,350); }
 function finishAdv(){ SFX.fanfare(); const id=S.adv.id, A=ADV[id]; let msg='Seikkailu suoritettu!';
@@ -5287,7 +5288,7 @@ function viewSettings(confirming){ const p=S.profile;
   ${confirming?`<p class="calm">Pelaajan ${esc(p.name)} pisteet, tarina ja osaaminen poistetaan. Muiden pelaajien tiedot säilyvät. Oletko varma?</p><div class="row"><button class="btn" data-act="reset">Kyllä, aloita alusta</button><button class="btn ghost" data-act="settings">Peruuta</button></div>`
   :`<button class="btn ghost wide" data-act="askreset">Aloita alusta (vain ${esc(p.name)})</button>`}
   <button class="btn ghost wide" data-act="sound">Äänet: ${S.sound===false?'pois':'päällä'}</button>
-  ${(window.PP3D&&PP3D.ok&&theme()==='horse')?`<button class="btn ghost wide" data-act="gfx">Grafiikka: ${S.gfx==='2d'?'2D (kevyt)':'3D'}</button>`:''}
+  ${(window.PP3D&&PP3D.ok&&theme()==='horse')?`<button class="btn ghost wide" data-act="gfx">Grafiikka: ${S.gfx==='2d'?'2D (kevyt)':'3D'}</button>${use3d()?`<button class="btn ghost wide" data-act="sets3d">Katso seikkailujen paikat</button>`:''}`:''}
   <button class="btn ghost wide" data-act="autoread">Lue tehtävät ääneen automaattisesti: ${autoRead()?'päällä':'pois'}</button>
   <p class="small muted">Puheääni tulee laitteen omasta puhesynteesistä. iPhonessa ja iPadissa pehmeämmän äänen voi yleensä ladata Saavutettavuus-asetusten puheasetuksista: Asetukset → Saavutettavuus → näön kohdalta ääneenluvun asetukset (nimi vaihtelee iOS-version ja kielen mukaan) → Äänet → Suomi → valitse ääni, jossa on merkintä parannettu tai premium, ja lataa se Wi-Fi-yhteydellä. Nopein tapa löytää kohta on kirjoittaa Asetusten hakukenttään ”Äänet”. Sulje ja avaa peli latauksen jälkeen.</p>
   <button class="btn alt wide" data-act="hub">Takaisin peliin</button>${window.APP_VERSION?`<p class="small muted center" style="margin-top:8px">Versio ${window.APP_VERSION}</p>`:''}</div></div>`; }
@@ -5335,7 +5336,7 @@ function interactiveHTML(q){ const u=R.ui, lock=R.answered?'locked':'';
 
 function renderQ(fbHTML){ const q=R.q;
   let top='';
-  if(R.kind==='story'){ top=`<div class="qhead"><h3>${esc(ADV[S.adv.id].title)}</h3></div><div class="sceneq">${sceneSVG(R.node)}</div>`; }
+  if(R.kind==='story'){ top=`<div class="qhead"><h3>${esc(ADV[S.adv.id].title)}</h3></div><div class="sceneq">${use3d()?slot3d('story','',R.node.set3d||set3d(R.node.bg),(f=>f?Object.assign({},f,{kidRun:null, path:(f.path&&!f.path.loop)?(q=>({pts:[q,q], r0:f.path.r0, end:f.path.end, face:f.path.face, gait:'Idle'}))(f.path.pts[f.path.pts.length-1]):null}):null)((S.adv&&S.adv.cfx&&S.adv.cfx.node===S.adv.node)?S.adv.cfx.fx:R.node.fx)):sceneSVG(R.node)}</div>`; }
   else if(R.kind==='match'){ const per=R.ot?lg().otLabel:lg().per(R.i);
     top=`<div class="board" aria-live="polite"><span class="team">${esc(S.profile.pet)}${R.pp?`<span class="pp">${lg().ppShort}</span>`:''}</span><span class="score">${R.us}–${R.them}</span><span class="team r">${esc(R.opp)}</span><span class="per">${per}</span></div>`; }
   else { const dots=Array.from({length:R.count},(_,k)=>`<i class="${k<R.results.length?(R.results[k]?'ok':'no'):(k===R.i?'cur':'')}"></i>`).join('');
@@ -5365,7 +5366,7 @@ function mount(q){ if(R.answered && q.type!=='wheel') return;
     const ang=e=>{ const r=svg.getBoundingClientRect(), x=(e.clientX-r.left)/r.width*200-100, y=(e.clientY-r.top)/r.height*200-100; return {a:(Math.atan2(x,-y)*180/Math.PI+360)%360, d:Math.hypot(x,y)}; };
     const cd=(a,b)=>Math.abs(((a-b)%360+540)%360-180);
     const set=(which,a)=>{ const pm=R.ui.ma, ph=R.ui.ha; setTimeout(()=>{ if(R&&R.ui&&(R.ui.ma!==pm||R.ui.ha!==ph)) SFX.tick(); },0); if(which==='m'){ R.ui.ma=Math.round(a/30)*30%360; document.querySelectorAll('#handsvg .mh, .sceneq .mh').forEach(l=>{ l.setAttribute('x2',hx(R.ui.ma,72)); l.setAttribute('y2',hy(R.ui.ma,72)); }); }
-      else { R.ui.ha=Math.round(a/7.5)*7.5%360; document.querySelectorAll('#handsvg .hh, .sceneq .hh').forEach(l=>{ l.setAttribute('x2',hx(R.ui.ha,44)); l.setAttribute('y2',hy(R.ui.ha,44)); }); } };
+      else { R.ui.ha=Math.round(a/7.5)*7.5%360; document.querySelectorAll('#handsvg .hh, .sceneq .hh').forEach(l=>{ l.setAttribute('x2',hx(R.ui.ha,44)); l.setAttribute('y2',hy(R.ui.ha,44)); }); }  if(window.PP3D&&PP3D.setClock) PP3D.setClock(R.ui.ma,R.ui.ha); };
     svg.addEventListener('pointerdown',e=>{ const p=ang(e), dm=cd(p.a,R.ui.ma), dh=cd(p.a,R.ui.ha);
       grab = dm+15<dh?'m':dh+15<dm?'h':(p.d>58?'m':'h'); svg.setPointerCapture(e.pointerId); set(grab,p.a); e.preventDefault(); });
     svg.addEventListener('pointermove',e=>{ if(grab) set(grab,ang(e).a); });
@@ -5509,6 +5510,7 @@ document.addEventListener('click', e=>{ const b=e.target.closest('[data-act]'); 
   else if(a==='next'){ advance(); window.scrollTo(0,0); }
   else if(a==='quit'){ const st=R&&R.kind==='story'; R=null; st?viewAdventure():viewHub(); window.scrollTo(0,0); }
   else if(a==='speak'){ speakQ(); }
+  else if(a==='sets3d') viewSets3d(v||'meadow');
   else if(a==='gfx'){ S.gfx=S.gfx==='2d'?'3d':'2d'; save(); viewSettings(false); }
   else if(a==='autoread'){ S.autoRead=!autoRead(); save(); viewSettings(false); }
   else if(a==='settings'){ viewSettings(false); }
@@ -5531,7 +5533,7 @@ document.addEventListener('click', e=>{ const b=e.target.closest('[data-act]'); 
   else if(a==='adv'){ startAdv(v); }
   else if(a==='advresume'){ viewAdventure(); window.scrollTo(0,0); }
   else if(a==='advnext'){ S.adv.node=ADV[S.adv.id].nodes[S.adv.node].next; save(); viewAdventure(); window.scrollTo(0,0); }
-  else if(a==='advchoice'){ const c=ADV[S.adv.id].nodes[S.adv.node].choices[+b.dataset.i]; Object.assign(S.adv.vars, c.set||{}); if(c.keep){ S.storyVars=S.storyVars||{}; Object.assign(S.storyVars, c.keep); } S.adv.node=c.next; save(); viewAdventure(); window.scrollTo(0,0); }
+  else if(a==='advchoice'){ const c=ADV[S.adv.id].nodes[S.adv.node].choices[+b.dataset.i]; Object.assign(S.adv.vars, c.set||{}); S.adv.cfx=c.fx?{node:c.next, fx:c.fx}:null; if(c.keep){ S.storyVars=S.storyVars||{}; Object.assign(S.storyVars, c.keep); } S.adv.node=c.next; save(); viewAdventure(); window.scrollTo(0,0); }
   else if(a==='advfork'){ startRound({kind:'story', count:1, node:ADV[S.adv.id].nodes[S.adv.node], fork:+b.dataset.i}); window.scrollTo(0,0); }
   else if(a==='advtask'){ startRound({kind:'story', count:1, node:ADV[S.adv.id].nodes[S.adv.node]}); window.scrollTo(0,0); }
   else if(a==='advend'){ finishAdv(); }
@@ -6159,7 +6161,15 @@ if(!ALLT.includes('ai1_kirjain')) ALLT.push('ai1_kirjain'); S.levels.ai1_kirjain
 
 /* ===== v39: 3D-hevonen (PP3D-moottori, ks. pilot3d/src/engine.js) ===== */
 function use3d(){ return theme()==='horse' && S.gfx!=='2d' && !!(window.PP3D && PP3D.ok); }
-function slot3d(mode, extra){ return `<div class="pp3d-slot" data-mode="${mode}" style="position:relative; height:${mode==='hub'?'min(62vw,300px)':'min(58vw,280px)'}">${extra||''}</div>`; }
+function slot3d(mode, extra, set, fx){ return `<div class="pp3d-slot" data-mode="${mode}"${set?` data-set="${set}"`:''}${fx?` data-fx="${encodeURIComponent(JSON.stringify(fx))}"`:''} style="position:relative; height:${mode==='hub'||mode==='story'?'min(62vw,300px)':'min(58vw,280px)'}">${extra||''}</div>`; }
+/* v48: seikkailujen 3D-kulissit (taso 1) */
+const SET3D={meadow:'meadow', stable:'stable', arena:'arena', forest:'forest', beach:'beach', night:'night', snow:'snow', home:'stable', homenight:'night', park:'meadow'};
+function set3d(bg){ return SET3D[bg]||'meadow'; }
+const SET_NAMES=[['meadow','Laidun'],['arena','Kenttä'],['stable','Talli'],['forest','Metsä'],['beach','Ranta'],['night','Yö'],['stablenight','Talli yöllä'],['icelake','Jäätynyt järvi'],['snow','Talvi']];
+function viewSets3d(cur){ $('#app').innerHTML=`${header()}<div class="stack" style="margin-top:16px"><h2>Seikkailujen paikat</h2>
+  <div class="card scenecard">${slot3d('story','',cur)}</div>
+  <div class="topics">${SET_NAMES.map(([k,n])=>`<button class="chip" data-act="sets3d" data-v="${k}" aria-pressed="${k===cur}">${n}</button>`).join('')}</div>
+  <button class="btn ghost wide" data-act="settings">Takaisin</button></div>`; }
 function mixHex(h,t,f){ const a=parseInt(h.slice(1),16), b=parseInt(t.slice(1),16); const c=[16,8,0].map(k=>Math.round(((a>>k)&255)*(1-f)+((b>>k)&255)*f)); return '#'+c.map(x=>x.toString(16).padStart(2,'0')).join(''); }
 let SHOP_TRY=null;
 const inShop=()=>!!document.querySelector('#app .shop');
@@ -6170,7 +6180,7 @@ function avatar3d(){ const a=S.avatar||{}, gv=gearView(); return {gear:{helmet:g
 function horseColors(){ const H=S.horse||{coat:0,mane:0}, co=COATS[H.coat]||COATS[0], m=(MANES[H.mane]||MANES[0])[1]; return {main:co[1], dark:co[2], light:mixHex(co[1],'#ffffff',.14), hair:m}; }
 (function(){ const app=document.getElementById('app'); if(!app || !window.MutationObserver) return;
   new MutationObserver(()=>{ const el=app.querySelector('.pp3d-slot'); if(!el || el.dataset.on) return; el.dataset.on='1';
-    if(!use3d()) return; try{ PP3D.mount(el,{mode:el.dataset.mode, pet:S.profile&&S.profile.pet, colors:horseColors(), avatar:avatar3d(), gear:gear3d(), sound:S.sound!==false, meters:S.meters }); }catch(e){ console.error(e); } }).observe(app,{childList:true}); })();
+    if(!use3d()) return; try{ PP3D.mount(el,{mode:el.dataset.mode, set:el.dataset.set, fx:el.dataset.fx?JSON.parse(decodeURIComponent(el.dataset.fx)):null, pet:S.profile&&S.profile.pet, colors:horseColors(), avatar:avatar3d(), gear:gear3d(), sound:S.sound!==false, meters:S.meters }); if(PP3D.setClock){ const u=(typeof R!=='undefined' && R && R.q && R.q.type==='hands' && R.ui)?R.ui:{ha:240,ma:0}; PP3D.setClock(u.ma,u.ha); } }catch(e){ console.error(e); } }).observe(app,{childList:true}); })();
 window.__toast=toast;
 /*BOOT*/bootView();
 })();
