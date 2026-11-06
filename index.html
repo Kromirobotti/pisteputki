@@ -310,13 +310,13 @@ ul.steps{margin:0; padding-left:20px} ul.steps li{margin:2px 0}
 </head>
 <body>
 <script>
-window.APP_VERSION='70.1 (6.11.2026)';
+window.APP_VERSION='71 (6.11.2026)';
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
 try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
 window.addEventListener('load',()=>{ try{ const k='pisteputki-appver', old=localStorage.getItem(k); localStorage.setItem(k, window.APP_VERSION);
   if(old && old!==window.APP_VERSION) setTimeout(()=>{ if(typeof window.__toast==='function') window.__toast('Peli päivittyi: versio '+window.APP_VERSION); },1200); }catch(e){} });
 </script>
-<script src="pp3d.js?v=70.1"></script>
+<script src="pp3d.js?v=71"></script>
 
 <div class="wrap" id="app"></div>
 
@@ -4964,7 +4964,11 @@ const DAILY_T=[
   {id:'exam', ok:()=>true, make:()=>({text:'Tee yksi koeharjoittelu loppuun', target:1, go:'exam'})},
   {id:'match', ok:()=>isLeague(), make:()=>({text:'Pelaa yksi ottelu', target:1})},
   {id:'care', ok:()=>!isLeague(), make:()=>({text:fill(isDog()?'Hoida {pet}-koiraa kaksi kertaa':'Hoida {pet}-hevosta kaksi kertaa'), target:2})},
-  {id:'dadv', ok:()=>!isLeague() && !!dailyList(), make:()=>({text:'Pelaa päivän seikkailu', target:1})}];
+  {id:'dadv', ok:()=>!isLeague() && !!dailyList(), make:()=>({text:'Pelaa päivän seikkailu', target:1})},
+  {id:'mini', ok:()=>theme()==='hockey', make:()=>({text:'Pelaa minipeli ottelun jälkeen', target:1})},
+  {id:'minipts', ok:()=>theme()==='hockey', make:()=>({text:'Tee minipeleissä 5 maalia tai torjuntaa', target:5})}];
+/* v71: teemaan sidotut haasteet vaihtuvat, jos teema vaihtuu ennen palkinnon lunastusta */
+const CH_THEMED=['match','care','dadv','mini','minipts','wins','minis'];
 const WEEK_T=[
   {id:'tasks', ok:()=>true, make:()=>({text:'Tee tällä viikolla 80 tehtävää', target:80, go:'any'})},
   {id:'allsubj', ok:()=>true, make:()=>{ const n=(SUBJ[S.profile.grade]||[]).length; return {text:'Tee vähintään 5 tehtävää jokaisesta aineesta', target:n, go:'any'}; }},
@@ -4972,12 +4976,14 @@ const WEEK_T=[
   {id:'days', ok:()=>true, make:()=>({text:'Harjoittele neljänä eri päivänä', target:4, go:'any'})},
   {id:'correct', ok:()=>true, make:()=>({text:'Vastaa oikein 60 kertaa', target:60, go:'any'})},
   {id:'wins', ok:()=>isLeague(), make:()=>({text:'Voita 3 ottelua', target:3})},
-  {id:'adv', ok:()=>true, make:()=>({text:'Pelaa 3 seikkailua', target:3})}];
+  {id:'adv', ok:()=>true, make:()=>({text:'Pelaa 3 seikkailua', target:3})},
+  {id:'minis', ok:()=>theme()==='hockey', make:()=>({text:'Pelaa 4 minipeliä otteluiden jälkeen', target:4})}];
 function pickT(list, key){ const av=list.filter(t=>t.ok()); const t=av[hsh(key+S.profile.name)%av.length]; return Object.assign({id:t.id, prog:0, done:false, claimed:false}, t.make()); }
 function chInit(){ if(!S.profile) return null; S.ch=S.ch||{}; const c=S.ch; c.streak=c.streak||{cur:0,best:0,last:null,rest:0}; c.badges=c.badges||0; c.wear=c.wear||{}; c.gold=c.gold||0;
   const d=today(), w=weekKey();
-  if(!c.day||c.day.date!==d){ c.day=Object.assign(pickT(DAILY_T,'d'+d), {date:d}); }
-  if(!c.week||c.week.key!==w){ c.week=Object.assign(pickT(WEEK_T,'w'+w), {key:w, sub:{}, days:[]}); }
+  const stale=(ch,L)=>{ if(ch.claimed) return false; const t=L.find(x=>x.id===ch.id); return !t || !t.ok() || (CH_THEMED.includes(ch.id) && ch.th && ch.th!==theme()); };
+  if(!c.day||c.day.date!==d||stale(c.day,DAILY_T)){ c.day=Object.assign(pickT(DAILY_T,'d'+d+theme()), {date:d, th:theme()}); }
+  if(!c.week||c.week.key!==w||stale(c.week,WEEK_T)){ const old=c.week&&c.week.key===w?c.week:null; c.week=Object.assign(pickT(WEEK_T,'w'+w+theme()), {key:w, th:theme(), sub:old?old.sub:{}, days:old?old.days:[]}); }
   return c; }
 function streakNow(){ const c=chInit(); if(!c) return 0; const s=c.streak, d=today(); if(!s.last) return 0;
   if(s.last===d||s.last===dayAdd(d,-1)) return s.cur; if(s.last===dayAdd(d,-2)&&s.rest>0) return s.cur; return 0; }
@@ -5003,6 +5009,7 @@ function chTrack(ev, o){ const c=chInit(); if(!c) return; const D=c.day, W=c.wee
   if(ev==='exam'){ if(D.id==='exam') bump(D,1); if(W.id==='exam8' && o.g>=8) bump(W,1); }
   if(ev==='match'){ if(D.id==='match') bump(D, D.prog+1); if(W.id==='wins' && o.win) bump(W, W.prog+1); }
   if(ev==='care'){ if(D.id==='care') bump(D, D.prog+1); }
+  if(ev==='mini'){ if(D.id==='mini') bump(D,1); if(D.id==='minipts') bump(D, D.prog+(o.mode==='zamboni'?(o.g?3:0):o.g||0)); if(W.id==='minis') bump(W, W.prog+1); }
   if(ev==='adv'){ if(D.id==='dadv' && o.daily) bump(D,1); if(W.id==='adv') bump(W, W.prog+1); }
   save(); }
 /* ---------- palkintopolku ---------- */
@@ -6319,7 +6326,7 @@ function trophyArt(){ if(hk3d() && PP3D.cupImage){ const u=PP3D.cupImage(lg().cu
 function hk3d(){ return theme()==='hockey' && S.gfx!=='2d' && !!(window.PP3D && PP3D.ok); }
 const zamBand=()=>{ const g=S.profile.grade; return g<=2?'12':g<=4?'34':'56'; };
 function hkShoot(n, back, mode){ if(!hk3d()) return mini2d(mode||'shoot', n, back); R={kind:'mini3d'}; const gk=mode==='goalie', zm=mode==='zamboni'; S.zamBest=S.zamBest||{}; const zb=S.zamBest[zamBand()]; PP3D.mount(null,{mode:zm?'zamboni':gk?'goalie':'shoot', best:zb?zb.t:0, theme:'hockey', shots:n, grade:S.profile.grade, pet:S.profile.pet, avatar:avatar3d(), sound:S.sound!==false, say:t=>{ if(autoRead()) speakSeq([[t,'fi-FI']]); },
-  onDone:(g,info)=>{ const c=g*3; if(zm&&info&&info.time&&(!zb||info.time<zb.t)){ S.zamBest[zamBand()]={t:info.time, d:today()}; } if(c) S.coins+=c; save(); toast(zm?(info&&info.record?`Uusi 3D-ennätys! +${c} kolikkoa`:c?`Jää kiiltää! +${c} kolikkoa`:'Jäänhoito päättyi.'):g?(gk?`Maalivahtikisa: ${g} torjuntaa! +${c} kolikkoa`:`Rankkarikisa: ${g} maalia! +${c} kolikkoa`):(gk?'Maalivahtikisa päättyi.':'Rankkarikisa päättyi.')); (back||viewHub)(); }, onSkip:()=>(back||viewHub)()}); }
+  onDone:(g,info)=>{ chTrack('mini',{g, mode:zm?'zamboni':gk?'goalie':'shoot'}); const c=g*3; if(zm&&info&&info.time&&(!zb||info.time<zb.t)){ S.zamBest[zamBand()]={t:info.time, d:today()}; } if(c) S.coins+=c; save(); toast(zm?(info&&info.record?`Uusi 3D-ennätys! +${c} kolikkoa`:c?`Jää kiiltää! +${c} kolikkoa`:'Jäänhoito päättyi.'):g?(gk?`Maalivahtikisa: ${g} torjuntaa! +${c} kolikkoa`:`Rankkarikisa: ${g} maalia! +${c} kolikkoa`):(gk?'Maalivahtikisa päättyi.':'Rankkarikisa päättyi.')); (back||viewHub)(); }, onSkip:()=>(back||viewHub)()}); }
 function hockey3d(){ const g=S.gear||{}, L=logoOf('hockey'); const j=g.jersey||SHIRT[(S.avatar||{}).shirt]||'#D7263D';
   return {sport:'hockey', jersey:j, helmet:g.helmet||'#F4F4F4', logo:(L&&L.printed)?`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${logoInner(L)}</svg>`:null}; }
 const RINK_VIEWS=[['player','Pelaaja',{kidAt:[0.2,1.0,0.5], props:[['puck',-0.6,1.7]], camT:[0.1,0.8,1.0], camD:0.5}],
@@ -6351,7 +6358,7 @@ function mini2d(mode, n, back){ R={kind:'mini2d'}; const gr=S.profile.grade||3, 
   const G=M2={mode, n, done:false, t:0, raf:0, go:false}; let W=0,H=0,dpr=Math.min(2,window.devicePixelRatio||1);
   const fit=()=>{ W=ov.clientWidth; H=ov.clientHeight; cv.width=W*dpr; cv.height=H*dpr; cv.style.width=W+'px'; cv.style.height=H+'px'; cx.setTransform(dpr,0,0,dpr,0,0); place(); };
   const setMsg=(t,sp)=>{ msgEl.textContent=t; if(sp) say(t); };
-  const finish=(score, info)=>{ if(G.done) return; G.done=true; setTimeout(()=>{ close(); const c=score*3; if(mode==='zamboni'&&info&&info.time&&(!zb||info.time<zb.t)) S.zamBest2d[band]={t:info.time, d:today()}; if(c) S.coins+=c; save();
+  const finish=(score, info)=>{ if(G.done) return; G.done=true; chTrack('mini',{g:score, mode}); setTimeout(()=>{ close(); const c=score*3; if(mode==='zamboni'&&info&&info.time&&(!zb||info.time<zb.t)) S.zamBest2d[band]={t:info.time, d:today()}; if(c) S.coins+=c; save();
       toast(mode==='zamboni'?(info&&info.record?`Uusi 2D-ennätys! +${c} kolikkoa`:c?`Jää kiiltää! +${c} kolikkoa`:'Jäänhoito päättyi.'):score?(mode==='goalie'?`Maalivahtikisa: ${score} torjuntaa! +${c} kolikkoa`:`Rankkarikisa: ${score} maalia! +${c} kolikkoa`):(mode==='goalie'?'Maalivahtikisa päättyi.':'Rankkarikisa päättyi.')); (back||viewHub)(); }, 2200); };
   const close=()=>{ cancelAnimationFrame(G.raf); window.removeEventListener('resize',fit); ov.remove(); document.body.style.overflow=''; M2=null; };
   ov.querySelector('.m2-skip').onclick=()=>{ G.done=true; close(); (back||viewHub)(); };
