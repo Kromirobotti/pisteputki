@@ -310,13 +310,13 @@ ul.steps{margin:0; padding-left:20px} ul.steps li{margin:2px 0}
 </head>
 <body>
 <script>
-window.APP_VERSION='71 (6.11.2026)';
+window.APP_VERSION='72 (6.11.2026)';
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
 try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
 window.addEventListener('load',()=>{ try{ const k='pisteputki-appver', old=localStorage.getItem(k); localStorage.setItem(k, window.APP_VERSION);
   if(old && old!==window.APP_VERSION) setTimeout(()=>{ if(typeof window.__toast==='function') window.__toast('Peli päivittyi: versio '+window.APP_VERSION); },1200); }catch(e){} });
 </script>
-<script src="pp3d.js?v=71"></script>
+<script src="pp3d.js?v=72"></script>
 
 <div class="wrap" id="app"></div>
 
@@ -1943,7 +1943,7 @@ function kid(x,y,s,mode){ const a=S.avatar, sk=SKIN[a.skin]||SKIN[0], hc=HAIR[a.
   <rect x="19" y="78" width="9" height="36" rx="3" fill="#2E4A7A"/><rect x="32" y="78" width="9" height="36" rx="3" fill="#2E4A7A"/>
   <ellipse cx="23" cy="116" rx="7" ry="4" fill="#222"/><ellipse cx="37" cy="116" rx="7" ry="4" fill="#222"/>
   <rect x="9" y="44" width="9" height="30" rx="4.5" fill="${SP.f}"/><rect x="42" y="44" width="9" height="30" rx="4.5" fill="${SP.f}"/>
-  <circle cx="13.5" cy="76" r="4.5" fill="${sk}"/><circle cx="46.5" cy="76" r="4.5" fill="${sk}"/>
+  ${mode==='hockey'?(()=>{ const gc=kitBase(g.gloves||'#1e1f22')||'#1e1f22', sp=(g.stick||'#1e1f22|#d7263d').split('|'), tc=g.tape||'#f2f2ef'; return `<path d="M47 74 L58 113" stroke="${sp[0]}" stroke-width="3.6" stroke-linecap="round"/><path d="M50.5 86 L53.5 97" stroke="${sp[1]}" stroke-width="3.8"/><path d="M57 113 L74 113" stroke="${sp[0]}" stroke-width="4.4" stroke-linecap="round"/><path d="M61 113 L72 113" stroke="${tc}" stroke-width="3.6"/><path d="M46 72 L48.5 78" stroke="${tc}" stroke-width="4"/><rect x="8" y="71" width="11" height="10" rx="3" fill="${gc}"/><rect x="41" y="71" width="11" height="10" rx="3" fill="${gc}"/>`; })():`<circle cx="13.5" cy="76" r="4.5" fill="${sk}"/><circle cx="46.5" cy="76" r="4.5" fill="${sk}"/>`}
   ${girl?`<path d="M19 43 Q30 39 41 43 Q44 50 41 60 Q39 66 43 82 L17 82 Q21 66 19 60 Q16 50 19 43 Z" fill="${SP.f}"/>`:`<rect x="16" y="42" width="28" height="40" rx="7" fill="${SP.f}"/>`}${mode==='hockey'?'<rect x="16" y="64" width="28" height="5" fill="#fff" opacity=".85"/>':mode==='football'?footKit():mode==='floorball'?floorKit():''}${(mode==='hockey'||mode==='football'||mode==='floorball'||mode==='basketball')?kidLogo(mode)+chKid(mode):''}
   ${(mode==='horse'&&g.rvest)?(()=>{ const V=paint(g.rvest); return V.d+`<path d="M17 44 L43 44 L42 79 L18 79 Z" fill="${V.f}" stroke="rgba(0,0,0,.18)"/><path d="M30 44 L30 79" stroke="rgba(0,0,0,.25)" stroke-width="1.2"/>`; })():''}
   ${(mode==='horse'&&g.rboots)?(()=>{ const B=paint(g.rboots); return B.d+`<rect x="18" y="98" width="11" height="19" rx="3" fill="${B.f}"/><rect x="31" y="98" width="11" height="19" rx="3" fill="${B.f}"/>`; })():''}
@@ -2362,7 +2362,7 @@ function previewScene(){ return isLeague()?sceneSVG({bg:tv({football:'pitch',flo
 function viewAvatar(first){ setTheme(); const a=S.avatar, hockey=isHockey();
   const sw=(key,arr,lab)=>arr.map((c,i)=>`<button class="sw" style="background:${c}" data-act="av" data-k="${key}" data-v="${i}" aria-label="${lab} ${i+1}" aria-pressed="${a[key]===i}"></button>`).join('');
   $('#app').innerHTML=`${header()}<div class="stack" style="margin-top:16px"><h2>${first?(isLeague()?'Tee oma hahmosi':isDog()?'Tee oma hahmosi ja koirasi':'Tee oma hahmosi ja hevosesi'):(isLeague()?'Oma hahmo':isDog()?'Oma hahmo ja koira':'Oma hahmo ja hevonen')}</h2>
-  <div class="card scenecard">${use3d()?slot3d('preview'):previewScene()}</div>
+  <div class="card scenecard">${use3d()?slot3d('preview'):hk3d()?slot3d('story','','rink',{kidAt:[0.2,1.0,0.35], props:[['puck',-0.7,1.6]], camT:[0.1,0.95,1.0], camD:0.52}):previewScene()}</div>
   <div class="card stack"><span class="label">Hahmo</span><div class="topics">${[['girl','Tyttö'],['boy','Poika']].map(([k,l])=>`<button class="chip" data-act="avgender" data-v="${k}" aria-pressed="${(a.gender||'girl')===k}">${l}</button>`).join('')}</div>
   <span class="label">Iho</span><div class="swatches">${sw('skin',SKIN,'Iho')}</div>
   ${hockey?'':`<span class="label">Hiusten väri</span><div class="swatches">${sw('hair',HAIR,'Hiukset')}</div>
@@ -5243,7 +5243,17 @@ function kitList(px, slot, keep){ const K=[
   return K.filter(k=>!(keep||{})[k[0]]).map(([k,n,c,v])=>it(px+k,n,c,slot,v,k.startsWith('n_')?'Maiden värit':k.startsWith('l_')?'Legendapaidat':/^(s_|h_|c_|hv_|b_)/.test(k)?'Kuosipaidat':'Yksiväriset paidat')); }
 SHOP.hockey=[it('j_red','Punainen pelipaita',50,'jersey','#D7263D','Yksiväriset paidat'),it('j_blue','Sininen pelipaita',50,'jersey','#1F5FA8','Yksiväriset paidat'),
   ...kitList('j_','jersey',{red:1,blue:1,l_gold:1}), it('j_gold','Kultainen pelipaita',900,'jersey','#F2B134','Legendapaidat'),
-  it('h_red','Punainen kypärä',120,'helmet','#D7263D','Kypärät'),it('h_blue','Sininen kypärä',120,'helmet','#1F5FA8','Kypärät'),it('h_white','Valkoinen kypärä',120,'helmet','#F4F4F4','Kypärät'),it('h_black','Musta kypärä',120,'helmet','#111418','Kypärät'),it('h_gold','Kultainen kypärä',600,'helmet','#E0A800','Kypärät')];
+  it('h_red','Punainen kypärä',120,'helmet','#D7263D','Kypärät'),it('h_blue','Sininen kypärä',120,'helmet','#1F5FA8','Kypärät'),it('h_white','Valkoinen kypärä',120,'helmet','#F4F4F4','Kypärät'),it('h_black','Musta kypärä',120,'helmet','#111418','Kypärät'),it('h_gold','Kultainen kypärä',600,'helmet','#E0A800','Kypärät'),
+  /* v72: mailat (varsi|raita), lavan teipit ja hanskat */
+  ...[['hs_wood','Puumaila',90,'#C98A3C|#7A4A20'],['hs_white','Valkoinen maila',130,'#F4F4F4|#1F5FA8'],['hs_red','Punainen maila',130,'#D7263D|#111418'],['hs_blue','Sininen maila',130,'#1F5FA8|#F2B134'],
+      ['hs_green','Vihreä maila',150,'#1E7A3C|#F4F4F4'],['hs_purple','Violetti maila',160,'#7A4CFF|#F4F4F4'],['hs_neon','Neonvihreä maila',220,'#39FF14|#111418'],['hs_pink','Pinkki maila',220,'#FF4FA3|#111418'],['hs_gold','Kultainen maila',650,'#E0A800|#111418']]
+    .map(([id,n,c,v])=>Object.assign(it(id,n,c,'stick',v,'Mailat'),{swv:'p:band:'+v.split('|')[0]+':'+v.split('|')[1]})),
+  ...[['tp_black','Musta teippi',40,'#1e1f22'],['tp_red','Punainen teippi',50,'#D7263D'],['tp_blue','Sininen teippi',50,'#1F5FA8'],['tp_yellow','Keltainen teippi',60,'#F2C200'],
+      ['tp_green','Vihreä teippi',60,'#2E9E5B'],['tp_pink','Pinkki teippi',70,'#FF6FA3'],['tp_orange','Oranssi teippi',70,'#F36C21'],['tp_neon','Neonteippi',110,'#C6FF00'],['tp_gold','Kultateippi',300,'#E0B23A']]
+    .map(([id,n,c,v])=>it(id,n,c,'tape',v,'Teipit')),
+  ...[['gl_red','Punaiset hanskat',110,'#D7263D'],['gl_blue','Siniset hanskat',110,'#1F5FA8'],['gl_white','Valkoiset hanskat',110,'#F4F4F4'],['gl_green','Vihreät hanskat',120,'#1E7A3C'],
+      ['gl_yellow','Keltaiset hanskat',130,'#F2C200'],['gl_orange','Oranssit hanskat',130,'#F36C21'],['gl_purple','Violetit hanskat',140,'#7A4CFF'],['gl_brown','Ruskeat nahkahanskat',200,'#7A4A2E'],['gl_gold','Kultaiset hanskat',550,'#E0A800']]
+    .map(([id,n,c,v])=>it(id,n,c,'gloves',v,'Hanskat'))];
 SHOP.football=[it('k_red','Punainen pelipaita',50,'kit','#D7263D','Yksiväriset paidat'),it('k_blue','Sininen pelipaita',50,'kit','#1F5FA8','Yksiväriset paidat'),
   ...kitList('k_','kit',{red:1,blue:1,s_gw:1}), it('k_stripe','Vihreävalkoiset pystyraidat',160,'kit','stripe','Kuosipaidat','#1E7A3C'),
   it('boots_red','Punaiset nappikset',140,'boots','#D7263D','Kengät'),it('boots_blue','Siniset nappikset',140,'boots','#1F5FA8','Kengät'),it('boots_neon','Neonkeltaiset nappikset',220,'boots','#C6FF00','Kengät'),it('boots_gold','Kultaiset nappikset',600,'boots','#F2B134','Kengät'),
@@ -5281,7 +5291,7 @@ SHOP.dog=[
   it('ht_red','Punainen pipo',180,'hat','#D7263D','Pipot'),it('ht_blue','Sininen pipo',180,'hat','#1F5FA8','Pipot'),it('ht_stripe','Raitapipo',260,'hat','p:hoops:#F2B134:#2F6DB5','Pipot'),
   it('bow','Rusetti',120,'bow',true,'Juhlavarusteet','#FF6FA3')];
 /* kauppanäkymä: ryhmät, hintatasot ja seuraava tavoite */
-function shopSwatch(x){ const v=x.val===true?(x.sw||'#E0A800'):x.val==='stripe'?'p:stripes:#1E7A3C:#FFFFFF':x.val; const P=paint(v);
+function shopSwatch(x){ const v=x.swv?x.swv:x.val===true?(x.sw||'#E0A800'):x.val==='stripe'?'p:stripes:#1E7A3C:#FFFFFF':x.val; const P=paint(v);
   return `<svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true">${P.d.replace(/id="(pp[^"]*)"/,'id="sw$1"').replace('x="16"','x="3"').replace(/ x="-100" y="0"/,' x="-110" y="-38"')}<rect x="3" y="3" width="28" height="28" rx="8" fill="${P.f.replace('url(#','url(#sw')}" stroke="rgba(0,0,0,.18)" stroke-width="1.5"/></svg>`; }
 let SHOP_CAT=null;
 function viewShop2(){ setTheme(); const list=(SHOP[theme()]||SHOP.horse).slice(), g=S.gear, on=x=>g[x.slot]===x.val;
@@ -5289,7 +5299,7 @@ function viewShop2(){ setTheme(); const list=(SHOP[theme()]||SHOP.horse).slice()
   const owned=list.filter(x=>g.owned.includes(x.id)).length, next=list.filter(x=>!g.owned.includes(x.id)).sort((a,b)=>a.cost-b.cost)[0];
   const items=list.filter(x=>(x.cat||'Muut')===SHOP_CAT).sort((a,b)=>a.cost-b.cost);
   $('#app').innerHTML=`${header()}<div class="stack" style="margin-top:16px"><div class="row" style="justify-content:space-between"><h2>Kauppa</h2><span class="pill coin">${COIN} ${S.coins}</span></div>
-  <div class="card scenecard">${use3d()?slot3d('preview'):withTry(previewScene)}</div>
+  <div class="card scenecard">${use3d()?slot3d('preview'):hk3d()?slot3d('story','','rink',{kidAt:[0.2,1.0,0.35], props:[['puck',-0.7,1.6]], camT:[0.1,0.95,1.0], camD:0.52}):withTry(previewScene)}</div>
   ${SHOP_TRY?`<div class="calm row" style="justify-content:space-between; gap:8px"><span>Esikatselu: <b>${esc(SHOP_TRY.name)}</b>${g.owned.includes(SHOP_TRY.id)?'':' (ei vielä ostettu)'}</span><button class="btn ghost" data-act="try" data-v="${SHOP_TRY.id}" style="padding:8px 12px">Lopeta</button></div>`:`<p class="small muted" style="margin:0">Napauta tuotetta, niin näet miltä se näyttää. Se tulee omaksi vasta, kun ostat sen.</p>`}
   <div class="card stack" style="gap:6px"><span class="small"><b>${owned}/${list.length}</b> tavaraa omana.${next?` Halvin seuraava: <b>${esc(next.name)}</b> · ${next.cost} ${COIN}${S.coins<next.cost?` (puuttuu ${next.cost-S.coins})`:''}`:' Kaikki kerätty – olet todellinen keräilijä!'}</span>
     <div class="goal"><i style="width:${Math.round(owned/list.length*100)}%"></i></div></div>
@@ -6327,8 +6337,8 @@ function hk3d(){ return theme()==='hockey' && S.gfx!=='2d' && !!(window.PP3D && 
 const zamBand=()=>{ const g=S.profile.grade; return g<=2?'12':g<=4?'34':'56'; };
 function hkShoot(n, back, mode){ if(!hk3d()) return mini2d(mode||'shoot', n, back); R={kind:'mini3d'}; const gk=mode==='goalie', zm=mode==='zamboni'; S.zamBest=S.zamBest||{}; const zb=S.zamBest[zamBand()]; PP3D.mount(null,{mode:zm?'zamboni':gk?'goalie':'shoot', best:zb?zb.t:0, theme:'hockey', shots:n, grade:S.profile.grade, pet:S.profile.pet, avatar:avatar3d(), sound:S.sound!==false, say:t=>{ if(autoRead()) speakSeq([[t,'fi-FI']]); },
   onDone:(g,info)=>{ chTrack('mini',{g, mode:zm?'zamboni':gk?'goalie':'shoot'}); const c=g*3; if(zm&&info&&info.time&&(!zb||info.time<zb.t)){ S.zamBest[zamBand()]={t:info.time, d:today()}; } if(c) S.coins+=c; save(); toast(zm?(info&&info.record?`Uusi 3D-ennätys! +${c} kolikkoa`:c?`Jää kiiltää! +${c} kolikkoa`:'Jäänhoito päättyi.'):g?(gk?`Maalivahtikisa: ${g} torjuntaa! +${c} kolikkoa`:`Rankkarikisa: ${g} maalia! +${c} kolikkoa`):(gk?'Maalivahtikisa päättyi.':'Rankkarikisa päättyi.')); (back||viewHub)(); }, onSkip:()=>(back||viewHub)()}); }
-function hockey3d(){ const g=S.gear||{}, L=logoOf('hockey'); const j=g.jersey||SHIRT[(S.avatar||{}).shirt]||'#D7263D';
-  return {sport:'hockey', jersey:j, helmet:g.helmet||'#F4F4F4', logo:(L&&L.printed)?`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${logoInner(L)}</svg>`:null}; }
+function hockey3d(){ const g=gearView(), L=logoOf('hockey'); const j=g.jersey||SHIRT[(S.avatar||{}).shirt]||'#D7263D';
+  return {sport:'hockey', jersey:j, glove:g.gloves||null, stick:g.stick||null, tape:g.tape||null, helmet:g.helmet||'#F4F4F4', logo:(L&&L.printed)?`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${logoInner(L)}</svg>`:null}; }
 const RINK_VIEWS=[['player','Pelaaja',{kidAt:[0.2,1.0,0.5], props:[['puck',-0.6,1.7]], camT:[0.1,0.8,1.0], camD:0.5}],
   ['goalie','Maalivahti',{kidAt:[11.0,1.4,1.6], npcs:[{who:'goalie',at:[15.4,0.2,-1.1]}], camT:[15.4,0.9,0.1], camD:0.6}],
   ['shot','Laukaus',{kidAt:[11.6,1.0,1.4], npcs:[{who:'goalie',at:[15.6,0,-1.35]}], props:[['puck',12.3,0.7]], camT:[14.2,1.0,0.2], camD:0.85}],
