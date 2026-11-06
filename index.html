@@ -310,13 +310,13 @@ ul.steps{margin:0; padding-left:20px} ul.steps li{margin:2px 0}
 </head>
 <body>
 <script>
-window.APP_VERSION='72 (6.11.2026)';
+window.APP_VERSION='72.1 (6.11.2026)';
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
 try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
 window.addEventListener('load',()=>{ try{ const k='pisteputki-appver', old=localStorage.getItem(k); localStorage.setItem(k, window.APP_VERSION);
   if(old && old!==window.APP_VERSION) setTimeout(()=>{ if(typeof window.__toast==='function') window.__toast('Peli päivittyi: versio '+window.APP_VERSION); },1200); }catch(e){} });
 </script>
-<script src="pp3d.js?v=72"></script>
+<script src="pp3d.js?v=72.1"></script>
 
 <div class="wrap" id="app"></div>
 
